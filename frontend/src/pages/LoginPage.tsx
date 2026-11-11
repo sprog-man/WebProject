@@ -214,7 +214,7 @@ export function LoginPage() {
           </div>
         </div>
 
-        <p className="login-legal">继续即表示你同意本地演示环境的使用条款。当前未配置 DeepSeek 时会自动使用本地演示模型。</p>
+        <p className="login-legal">继续即表示你同意本地演示环境的使用条款。当前未配置 AI 时会自动使用本地演示模型。</p>
       </section>
     </main>
   )

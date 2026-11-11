@@ -48,26 +48,85 @@ public class AiService {
     private AiResult runWithFallback(UUID ownerId, AiCall call) {
         AiRuntimeConfig runtime = resolveRuntime(ownerId);
         if (runtime != null) {
+            AiProvider provider;
             try {
-                return call.run(providerFactory.create(runtime));
+                provider = providerFactory.create(runtime);
             } catch (Exception exception) {
-                log.warn("AI provider '{}' failed, falling back to mock: {}",
-                        runtime.name(), exception.getMessage());
-                AiResult fallback = call.run(mockAiProvider);
-                return new AiResult(
-                        "你配置的 AI 服务暂时没有连通，我先用本地演示模式完成了这次调整。\n\n"
-                                + "可以到「AI 设置」里点一次测试连接，确认 Base URL、模型名和 API Key。\n\n"
-                                + fallback.reply(),
-                        fallback.spec(),
-                        fallback.changed(),
-                        "mock-fallback"
-                );
+                log.warn("Unable to create AI provider '{}': {}", runtime.name(), exception.getMessage());
+                return fallbackResult(call, exception);
             }
+
+            Exception lastFailure = null;
+            for (int attempt = 1; attempt <= 2; attempt++) {
+                try {
+                    return call.run(provider);
+                } catch (Exception exception) {
+                    lastFailure = exception;
+                    log.warn("AI provider '{}' failed (attempt {}/2): {}",
+                            runtime.name(), attempt, exception.getMessage());
+                    if (attempt == 2 || !isRetryable(exception)) {
+                        break;
+                    }
+                }
+            }
+            return fallbackResult(call, lastFailure);
         }
         if ("deepseek".equalsIgnoreCase(providerName)) {
             log.warn("app.ai.provider=deepseek but no user AI config and DEEPSEEK_API_KEY is empty; using mock provider");
         }
         return call.run(mockAiProvider);
+    }
+
+    private AiResult fallbackResult(AiCall call, Exception exception) {
+        AiResult fallback = call.run(mockAiProvider);
+        return new AiResult(
+                "你配置的 AI 服务这次没有成功返回页面。\n\n"
+                        + "原因：" + failureReason(exception) + "\n\n"
+                        + "我先用本地演示模式完成了本次调整。可以到「AI 设置」点一次测试连接，或者稍后重试。\n\n"
+                        + fallback.reply(),
+                fallback.spec(),
+                fallback.changed(),
+                "mock-fallback"
+        );
+    }
+
+    private String failureReason(Exception exception) {
+        if (exception == null) {
+            return "未知错误";
+        }
+        String message = exception.getMessage();
+        if (message == null || message.isBlank()) {
+            message = exception.getClass().getSimpleName();
+        }
+        message = message.replaceAll("\\s+", " ").trim();
+        return message.length() > 300 ? message.substring(0, 300) + "…" : message;
+    }
+
+    private boolean isRetryable(Exception exception) {
+        if (exception == null) {
+            return false;
+        }
+        Throwable cause = exception;
+        while (cause != null) {
+            if (cause instanceof java.net.http.HttpTimeoutException) {
+                return false;
+            }
+            if (cause instanceof java.io.IOException) {
+                return true;
+            }
+            cause = cause.getCause();
+        }
+        String message = exception.getMessage();
+        if (message == null) {
+            return false;
+        }
+        return message.contains("模型服务返回错误 429")
+                || message.contains("模型服务返回错误 500")
+                || message.contains("模型服务返回错误 502")
+                || message.contains("模型服务返回错误 503")
+                || message.contains("模型服务返回错误 504")
+                || message.contains("JSON 无法解析")
+                || message.contains("模型返回了空内容");
     }
 
     private AiRuntimeConfig resolveRuntime(UUID ownerId) {

@@ -255,6 +255,6 @@ public class MockAiProvider implements AiProvider {
     }
 
     private String demoNotice() {
-        return "\n\n（当前使用本地演示模型，配置 DEEPSEEK_API_KEY 后会切换为真实生成。）";
+        return "\n\n（当前使用本地演示模型。到「AI 设置」配置并设为默认后，会使用真实模型生成。）";
     }
 }
