@@ -503,11 +503,11 @@ export function AiSettingsPage() {
               </label>
 
               <label className="field">
-                <span className="field-label">模型名</span>
+                <span className="field-label">模型名（API 模型 ID）</span>
                 <input
                   value={form.model}
                   onChange={(event) => setForm((current) => ({ ...current, model: event.target.value }))}
-                  placeholder="deepseek-chat"
+                  placeholder="例如 agnes-2.5-flash，不要填展示名称"
                   spellCheck={false}
                 />
               </label>
@@ -539,8 +539,9 @@ export function AiSettingsPage() {
               </label>
 
               <p className="modal-hint">
-                OpenAI 兼容模式支持 DeepSeek、OpenAI、Moonshot、通义千问、智谱、OpenRouter、Groq、Ollama、vLLM 等服务；本地 Ollama 可填写
-                <code> http://localhost:11434/v1 </code>并留空 Key。
+                OpenAI 兼容模式支持 DeepSeek、OpenAI、Moonshot、通义千问、智谱、OpenRouter、Groq、Ollama、vLLM 等服务。
+                模型名必须填服务商文档里的 API 模型 ID，例如 <code>agnes-2.5-flash</code>，不要填「Agnes 2.5 Flash」这类展示名称。
+                本地 Ollama 可填写 <code>http://localhost:11434/v1</code> 并留空 Key。
               </p>
 
               {formError && <div className="form-error">{formError}</div>}

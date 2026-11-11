@@ -5,6 +5,8 @@ import tools.jackson.databind.ObjectMapper;
 import tools.jackson.databind.node.ObjectNode;
 import com.xiaoliu.webporduce.project.PageSpecValidator;
 
+import java.util.Locale;
+
 /**
  * 把“生成完整 PageSpec”和“返回局部 JSON Patch”的公共逻辑收敛在一处，
  * 具体供应商只需要实现一次模型 HTTP 调用。
@@ -148,7 +150,16 @@ abstract class AbstractJsonAiProvider implements AiProvider {
         if (detail.length() > 240) {
             detail = detail.substring(0, 240) + "…";
         }
+        String normalized = detail.toLowerCase(Locale.ROOT);
+        String hint = "";
+        if (normalized.contains("model_not_found")
+                || normalized.contains("model not found")
+                || normalized.contains("model is not available")) {
+            hint = "。请确认「模型名」填的是服务商 API 的模型 ID（不是展示名称），并确认当前账号或分组有该模型权限";
+        } else if (statusCode == 404) {
+            hint = "。请检查 Base URL 是否包含正确的 /v1 路径，并确认模型名是服务商文档中的 API 模型 ID";
+        }
         String suffix = detail.isBlank() ? "" : "：" + detail;
-        return "模型服务返回错误 " + statusCode + suffix;
+        return "模型服务返回错误 " + statusCode + hint + suffix;
     }
 }
