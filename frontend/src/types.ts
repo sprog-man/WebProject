@@ -101,6 +101,46 @@ export interface AssetResponse {
   height: number | null
 }
 
+export type AiProviderType = 'OPENAI_COMPATIBLE' | 'ANTHROPIC' | 'GEMINI'
+
+export interface AiProviderPreset {
+  type: AiProviderType
+  label: string
+  defaultBaseUrl: string
+  defaultModel: string
+  description: string
+}
+
+export interface AiConfig {
+  id: string
+  name: string
+  providerType: AiProviderType
+  baseUrl: string
+  model: string
+  keyHint: string | null
+  hasApiKey: boolean
+  defaultConfig: boolean
+  createdAt: string
+  updatedAt: string
+}
+
+export interface SaveAiConfigInput {
+  name: string
+  providerType: AiProviderType
+  baseUrl: string
+  model: string
+  apiKey?: string
+  defaultConfig: boolean
+}
+
+export interface AiConfigTestResult {
+  ok: boolean
+  message: string
+  latencyMs: number
+  model: string
+}
+
+
 export type SelectionKind = 'text' | 'image'
 
 export interface Selection {

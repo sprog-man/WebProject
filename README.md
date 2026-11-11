@@ -7,7 +7,8 @@
 ## 已实现
 
 - 邮箱 + 密码注册/登录，Session + CSRF 防护
-- 对话生成第一版页面（Mock AI 开箱可用，可切换 DeepSeek）
+- 用户自带 AI：按账号保存多套 OpenAI 兼容 / Anthropic / Gemini 配置，并设置默认
+- 对话生成第一版页面（未配置 AI 时使用本地 Mock，开箱可用）
 - AI 局部修改：改主题色、字号、图片、标题，或按指令隐藏区块
 - 画布直接编辑：点选文字改文案，点选图片换图
 - 属性面板：内容、样式、图片、布局四个维度
@@ -26,7 +27,7 @@
 | 前端 | React 19、TypeScript、Vite、Zustand、Immer、Zod、React Router |
 | 后端 | Spring Boot 4.1、Java 21、Spring Security、Spring Data JPA、Flyway |
 | 数据库 | H2（开发）/ PostgreSQL（生产） |
-| AI | DeepSeek Chat Completions 兼容接口，本地 Mock 兜底 |
+| AI | OpenAI 兼容 / Anthropic / Gemini，用户级配置 + 本地 Mock 兜底 |
 | 导出 | React DOM Server + JSZip，浏览器端打包 |
 
 ## 核心思路
@@ -105,18 +106,25 @@ mvn package
 java -jar target/WebPorduce-0.0.1-SNAPSHOT.jar
 ```
 
-### 启用真实 DeepSeek
+### 配置自己的 AI
 
-默认 `app.ai.provider=mock`，无需密钥即可体验完整流程。配置后切换：
+登录后进入 `#/settings/ai`，可以添加多套 AI 配置并指定一套为默认：
+
+| 协议 | 适合服务 |
+| --- | --- |
+| OpenAI 兼容 | OpenAI、DeepSeek、Moonshot、通义千问、智谱、OpenRouter、Groq、Ollama、vLLM 等 |
+| Anthropic | Claude 系列 |
+| Gemini | Google Gemini `generateContent` |
+
+每套配置包含名称、Base URL、模型名和 API Key。API Key 使用 AES-GCM 加密后存入数据库，列表接口只返回末四位提示。之后所有项目的对话会优先使用当前用户的默认配置；未配置或调用失败时自动降级到本地 Mock，编辑器不会因此不可用。
+
+本地开发默认使用内置的演示加密密钥。生产环境必须设置 `APP_AI_ENCRYPTION_KEY`（至少 16 个字符，建议 32 字节以上随机值）：
 
 ```bash
-AI_PROVIDER=deepseek \
-DEEPSEEK_API_KEY=sk-... \
-DEEPSEEK_MODEL=deepseek-chat \
-mvn -Dskip.frontend=true spring-boot:run
+APP_AI_ENCRYPTION_KEY=your-random-secret-at-least-16-chars
 ```
 
-若请求失败，服务会自动回退到 Mock，并在回复中说明本次是本地演示模式。
+也可以继续使用服务端级 DeepSeek 兜底：设置 `AI_PROVIDER=deepseek` 和 `DEEPSEEK_API_KEY`。用户配置优先于服务端兜底；服务端兜底优先于 Mock。
 
 ## Docker + PostgreSQL
 
@@ -141,8 +149,9 @@ docker compose up --build
 | `DB_URL` | `jdbc:postgresql://localhost:5432/webporduce` | 数据库地址 |
 | `DB_USERNAME` / `DB_PASSWORD` | `webporduce` | 数据库账号 |
 | `APP_STORAGE_ROOT` | `./data/uploads` | 上传文件目录 |
-| `AI_PROVIDER` | `mock` | `mock` 或 `deepseek` |
-| `DEEPSEEK_API_KEY` | 空 | DeepSeek 密钥 |
+| `APP_AI_ENCRYPTION_KEY` | 空（开发环境有内置回退） | 加密用户 AI Key，生产必填，至少 16 字符 |
+| `AI_PROVIDER` | `mock` | `mock` 或 `deepseek`（服务端兜底） |
+| `DEEPSEEK_API_KEY` | 空 | 服务端 DeepSeek 兜底密钥 |
 | `DEEPSEEK_BASE_URL` | `https://api.deepseek.com` | 兼容接口地址 |
 | `DEEPSEEK_MODEL` | `deepseek-chat` | 模型名 |
 | `SEED_DEMO` | `true` | 注册时是否生成示例项目 |
@@ -167,6 +176,13 @@ docker compose up --build
 | DELETE | `/api/projects/{id}` | 删除 |
 | PUT | `/api/projects/{id}/draft` | 保存草稿（带版本号） |
 | POST | `/api/projects/{id}/messages` | 发送对话消息并应用 AI 修改 |
+| GET | `/api/ai/providers` | 可接入的 AI 协议预设 |
+| GET | `/api/ai/configs` | 当前用户的 AI 配置列表 |
+| POST | `/api/ai/configs` | 新增 AI 配置 |
+| PUT | `/api/ai/configs/{id}` | 更新 AI 配置 |
+| DELETE | `/api/ai/configs/{id}` | 删除 AI 配置 |
+| POST | `/api/ai/configs/{id}/default` | 设置默认 AI |
+| POST | `/api/ai/configs/{id}/test` | 测试 Base URL / 模型 / Key |
 | POST | `/api/assets` | 上传图片 |
 | GET | `/api/assets/{id}/content` | 读取图片内容 |
 
@@ -175,7 +191,7 @@ docker compose up --build
 ```text
 WebPorduce/
 ├─ src/main/java/com/xiaoliu/webporduce/
-│  ├─ ai/          # Mock / DeepSeek Provider、Patch 应用
+│  ├─ ai/          # 多 Provider、用户 AI 配置、加密、Patch 应用
 │  ├─ asset/       # 图片上传与读取
 │  ├─ auth/        # 注册、登录、CSRF
 │  ├─ chat/        # 对话、消息持久化、AI 编排
@@ -193,7 +209,7 @@ WebPorduce/
 │     ├─ editor/       # ChatPanel / CanvasPanel / InspectorPanel
 │     ├─ renderer/     # PageRenderer 与导出共用样式
 │     ├─ store/        # Zustand 编辑器状态、自动保存、撤销重做
-│     ├─ pages/        # 登录、工作台、编辑器
+│     ├─ pages/        # 登录、工作台、编辑器、AI 设置
 │     └─ lib/          # API 客户端、导出、工具函数
 ├─ Dockerfile
 └─ docker-compose.yml

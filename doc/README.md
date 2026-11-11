@@ -1,7 +1,7 @@
 # Aster / WebPorduce 项目文档
 
-> 文档版本：v1.0  
-> 记录时间：2026-11-10  
+> 文档版本：v1.1  
+> 记录时间：2026-11-11  
 > 代码位置：`C:\IdeaProject\WebProduce\WebPorduce`  
 > 文档目的：完整记录产品方案、技术方案、已完成内容、验证结果和后续计划。
 
@@ -14,7 +14,7 @@
 | [03-页面协议与组件.md](./03-页面协议与组件.md) | `PageSpec` 数据协议、6 类组件、可编辑字段、主题和布局 |
 | [04-前端实现.md](./04-前端实现.md) | 编辑器三栏、画布、对话、属性面板、状态管理、撤销重做、导出 |
 | [05-后端与接口.md](./05-后端与接口.md) | Spring Boot 模块、接口清单、请求响应、版本控制和异常处理 |
-| [06-AI能力设计.md](./06-AI能力设计.md) | Mock / DeepSeek、生成与局部修改、JSON Patch、校验和降级策略 |
+| [06-AI能力设计.md](./06-AI能力设计.md) | 用户 AI 配置、三大协议适配、Mock/DeepSeek 兜底、生成与局部修改、JSON Patch、校验和降级策略 |
 | [07-数据模型与安全.md](./07-数据模型与安全.md) | 数据库表、实体关系、认证、Session、CSRF、资源权限和风险 |
 | [08-开发测试与部署.md](./08-开发测试与部署.md) | 本地运行、构建、测试、Docker、PostgreSQL、环境变量和排障 |
 | [09-进度记录与后续规划.md](./09-进度记录与后续规划.md) | 已完成清单、实际验证记录、已知限制、风险和下一阶段计划 |
@@ -31,15 +31,16 @@ Aster 是一个「用户与 AI 对话生成页面，再直接点选画布修改�
 - 前端：React 19 + TypeScript + Vite，已构建并由后端静态托管。
 - 认证：注册、登录、退出、当前用户、Session、CSRF 已联调。
 - 项目：新建、列表、详情、重命名、删除、自动保存、版本冲突已联调。
-- AI：默认 Mock 模式可完整生成页面和执行局部修改；DeepSeek 接口代码已完成。
+- AI：用户可配置 OpenAI 兼容 / Anthropic / Gemini，默认配置优先；服务端 DeepSeek 和 Mock 依次兜底。
+- AI 配置：加密落库、脱敏列表、默认切换、测试连接、编辑和删除已联调。
 - 编辑：文字行内编辑、图片替换、主题/字号/布局调整、撤销重做、自动保存已走查。
 - 图片：PNG 上传、资产鉴权读取、图片面板替换已走查。
 - 导出：`index.html + assets/` ZIP 已实际下载、解压和静态服务器渲染验证。
-- 构建：`mvn package` 完整构建成功，前端构建和 Maven 测试均通过。
+- 构建：前端 `npm run build` 和后端 `mvn compile` 通过，应用启动和 Flyway V2 迁移成功。
 
 ### 尚未完成或未验证
 
-- 真实 DeepSeek 生成：未配置 `DEEPSEEK_API_KEY`，只验证了 Mock 和降级路径代码。
+- 真实第三方模型生成：尚未配置真实 Key，只验证了错误地址降级和 Mock。
 - Docker / PostgreSQL：已提供 Dockerfile 和 compose 配置，但当前环境没有 Docker，未实际构建容器。
 - 真实窄屏回归：当前自动化浏览器窗口无法调整视口，≤900px 和 ≤390px 的完整手工走查仍建议补做。
 - 浏览器端 E2E 自动化：目前只有后端 API 冒烟测试，没有 Playwright/Cypress。
@@ -52,7 +53,9 @@ Aster 是一个「用户与 AI 对话生成页面，再直接点选画布修改�
 | 产品名 | Aster |
 | 工程名 | WebPorduce（目录拼写为 `WebPorduce`） |
 | 本地端口 | 后端 `8080`，前端开发服务器 `5173` |
-| 默认 AI | Mock，配置 `AI_PROVIDER=deepseek` + `DEEPSEEK_API_KEY` 后切换 |
+| 默认 AI | 用户默认配置；未配置时服务端 DeepSeek；再回退 Mock |
+| AI 配置 | `#/settings/ai`，OpenAI 兼容 / Anthropic / Gemini |
+| API Key | AES-GCM 加密落库，列表只返回末四位 |
 | 开发数据库 | H2 文件库 `./data/webporduce` |
 | 生产数据库 | PostgreSQL 16 |
 | 页面协议 | `PageSpec` JSON，固定 6 类组件 |

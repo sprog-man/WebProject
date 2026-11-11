@@ -7,6 +7,7 @@ import {
   IconLayout,
   IconLoader,
   IconMessage,
+  IconSettings,
   IconSparkles,
 } from '../components/Icons'
 import { api, ApiError } from '../lib/api'
@@ -239,6 +240,14 @@ export function EditorPage() {
           >
             {exporting ? <IconLoader className="spin" /> : <IconDownload />}
             {exporting ? '打包中' : '导出静态页'}
+          </button>
+          <button
+            type="button"
+            className="icon-btn editor-ai-settings-btn"
+            onClick={() => navigate('/settings/ai')}
+            title="AI 设置"
+          >
+            <IconSettings />
           </button>
           <div className="editor-avatar" title={user?.displayName || user?.email}>
             {initials(user?.displayName || user?.email || 'A')}

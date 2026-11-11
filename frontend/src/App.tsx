@@ -5,6 +5,7 @@ import { LogoMark } from './components/Icons'
 import { DashboardPage } from './pages/DashboardPage'
 import { EditorPage } from './pages/EditorPage'
 import { LoginPage } from './pages/LoginPage'
+import { AiSettingsPage } from './pages/AiSettingsPage'
 
 function FullScreenLoader() {
   return (
@@ -50,6 +51,14 @@ function App() {
               element={
                 <RequireAuth>
                   <EditorPage />
+                </RequireAuth>
+              }
+            />
+            <Route
+              path="/settings/ai"
+              element={
+                <RequireAuth>
+                  <AiSettingsPage />
                 </RequireAuth>
               }
             />

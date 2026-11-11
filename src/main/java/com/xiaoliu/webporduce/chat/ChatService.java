@@ -26,9 +26,9 @@ public class ChatService {
 
         AiResult result;
         if (emptyPage || forceGenerate) {
-            result = aiService.generate(preparation.projectName(), preparation.spec(), content);
+            result = aiService.generate(ownerId, preparation.projectName(), preparation.spec(), content);
         } else {
-            result = aiService.edit(preparation.spec(), content);
+            result = aiService.edit(ownerId, preparation.spec(), content);
         }
         return persistenceService.complete(
                 ownerId,

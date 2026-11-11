@@ -128,6 +128,97 @@ class ApiSmokeTest {
         assertThat(conflict.statusCode()).isEqualTo(409);
     }
 
+    @Test
+    void aiConfigCrudDefaultAndTestEndpoint() throws Exception {
+        HttpResponse<String> register = sendJson("POST", "/api/auth/register", """
+                {
+                  "email": "ai-smoke-%s@example.com",
+                  "password": "password123",
+                  "displayName": "AI 配置测试"
+                }
+                """.formatted(UUID.randomUUID().toString().replace("-", "")));
+        assertThat(register.statusCode()).isEqualTo(201);
+
+        HttpResponse<String> providers = sendGet("/api/ai/providers");
+        assertThat(providers.statusCode()).isEqualTo(200);
+        JsonNode presetList = objectMapper.readTree(providers.body());
+        assertThat(presetList.size()).isEqualTo(3);
+        assertThat(presetList.path(0).path("type").asText()).isEqualTo("OPENAI_COMPATIBLE");
+
+        HttpResponse<String> created = sendJson("POST", "/api/ai/configs", """
+                {
+                  "name": "错误地址配置",
+                  "providerType": "OPENAI_COMPATIBLE",
+                  "baseUrl": "http://127.0.0.1:9/v1",
+                  "model": "test-model",
+                  "apiKey": "sk-smoke-12345678",
+                  "defaultConfig": true
+                }
+                """);
+        assertThat(created.statusCode()).isEqualTo(201);
+        JsonNode first = objectMapper.readTree(created.body());
+        String firstId = first.path("id").asText();
+        assertThat(first.path("defaultConfig").asBoolean()).isTrue();
+        assertThat(first.path("keyHint").asText()).isEqualTo("5678");
+        assertThat(first.path("hasApiKey").asBoolean()).isTrue();
+        assertThat(first.has("apiKeyEncrypted")).isFalse();
+
+        HttpResponse<String> updated = sendJson("PUT", "/api/ai/configs/" + firstId, """
+                {
+                  "name": "错误地址配置已更新",
+                  "providerType": "OPENAI_COMPATIBLE",
+                  "baseUrl": "http://127.0.0.1:9/v1",
+                  "model": "test-model-2",
+                  "apiKey": "",
+                  "defaultConfig": true
+                }
+                """);
+        assertThat(updated.statusCode()).isEqualTo(200);
+        JsonNode updatedBody = objectMapper.readTree(updated.body());
+        assertThat(updatedBody.path("name").asText()).isEqualTo("错误地址配置已更新");
+        assertThat(updatedBody.path("hasApiKey").asBoolean()).isTrue();
+        assertThat(updatedBody.path("keyHint").asText()).isEqualTo("5678");
+
+        HttpResponse<String> tested = sendJson("POST", "/api/ai/configs/" + firstId + "/test", "");
+        assertThat(tested.statusCode()).isEqualTo(200);
+        assertThat(objectMapper.readTree(tested.body()).path("ok").asBoolean()).isFalse();
+
+        HttpResponse<String> second = sendJson("POST", "/api/ai/configs", """
+                {
+                  "name": "备用配置",
+                  "providerType": "GEMINI",
+                  "baseUrl": "http://127.0.0.1:9/v1beta",
+                  "model": "gemini-test",
+                  "apiKey": "gemini-smoke-key",
+                  "defaultConfig": false
+                }
+                """);
+        assertThat(second.statusCode()).isEqualTo(201);
+        String secondId = objectMapper.readTree(second.body()).path("id").asText();
+
+        HttpResponse<String> makeDefault = sendJson("POST", "/api/ai/configs/" + secondId + "/default", "");
+        assertThat(makeDefault.statusCode()).isEqualTo(200);
+        assertThat(objectMapper.readTree(makeDefault.body()).path("defaultConfig").asBoolean()).isTrue();
+
+        HttpResponse<String> list = sendGet("/api/ai/configs");
+        assertThat(list.statusCode()).isEqualTo(200);
+        JsonNode configs = objectMapper.readTree(list.body());
+        assertThat(configs.size()).isEqualTo(2);
+        assertThat(configs.path(0).path("defaultConfig").asBoolean()).isFalse();
+        assertThat(configs.path(1).path("defaultConfig").asBoolean()).isTrue();
+
+        HttpResponse<String> deleteDefault = sendJson("DELETE", "/api/ai/configs/" + secondId, "");
+        assertThat(deleteDefault.statusCode()).isEqualTo(204);
+
+        HttpResponse<String> afterDelete = sendGet("/api/ai/configs");
+        JsonNode remaining = objectMapper.readTree(afterDelete.body());
+        assertThat(remaining.size()).isEqualTo(1);
+        assertThat(remaining.path(0).path("defaultConfig").asBoolean()).isTrue();
+
+        HttpResponse<String> deleteLast = sendJson("DELETE", "/api/ai/configs/" + firstId, "");
+        assertThat(deleteLast.statusCode()).isEqualTo(204);
+    }
+
     private HttpResponse<String> sendGet(String path) throws Exception {
         return client.send(HttpRequest.newBuilder(URI.create(baseUrl + path))
                         .header("Accept", "application/json, text/html")

@@ -8,6 +8,7 @@ import {
   IconLogOut,
   IconPlus,
   IconRefresh,
+  IconSettings,
   IconSparkles,
   IconTrash,
   IconX,
@@ -171,6 +172,9 @@ export function DashboardPage() {
         </div>
         <nav className="dash-nav-links">
           <span className="is-active">工作台</span>
+          <button type="button" onClick={() => navigate('/settings/ai')}>
+            AI 设置
+          </button>
           <span>模板</span>
           <span>使用指南</span>
         </nav>
@@ -180,6 +184,14 @@ export function DashboardPage() {
             <strong>{user?.displayName || '设计师'}</strong>
             <span>{user?.email}</span>
           </div>
+          <button
+            type="button"
+            className="icon-btn dash-ai-settings-btn"
+            onClick={() => navigate('/settings/ai')}
+            title="AI 设置"
+          >
+            <IconSettings />
+          </button>
           <button type="button" className="icon-btn" onClick={() => void logout()} title="退出登录">
             <IconLogOut />
           </button>

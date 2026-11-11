@@ -1,9 +1,13 @@
 import type {
+  AiConfig,
+  AiConfigTestResult,
+  AiProviderPreset,
   AssetResponse,
   ChatMessage,
   PageSpec,
   ProjectDetail,
   ProjectSummary,
+  SaveAiConfigInput,
   SaveDraftResponse,
   SendMessageResponse,
   User,
@@ -218,6 +222,40 @@ export const api = {
       method: 'POST',
       body: formData,
     })
+  },
+
+  async aiProviders(): Promise<AiProviderPreset[]> {
+    return request<AiProviderPreset[]>('/api/ai/providers')
+  },
+
+  async aiConfigs(): Promise<AiConfig[]> {
+    return request<AiConfig[]>('/api/ai/configs')
+  },
+
+  async createAiConfig(input: SaveAiConfigInput): Promise<AiConfig> {
+    return request<AiConfig>('/api/ai/configs', {
+      method: 'POST',
+      body: input,
+    })
+  },
+
+  async updateAiConfig(configId: string, input: SaveAiConfigInput): Promise<AiConfig> {
+    return request<AiConfig>(`/api/ai/configs/${configId}`, {
+      method: 'PUT',
+      body: input,
+    })
+  },
+
+  async deleteAiConfig(configId: string): Promise<void> {
+    return request<void>(`/api/ai/configs/${configId}`, { method: 'DELETE' })
+  },
+
+  async setDefaultAiConfig(configId: string): Promise<AiConfig> {
+    return request<AiConfig>(`/api/ai/configs/${configId}/default`, { method: 'POST' })
+  },
+
+  async testAiConfig(configId: string): Promise<AiConfigTestResult> {
+    return request<AiConfigTestResult>(`/api/ai/configs/${configId}/test`, { method: 'POST' })
   },
 }
 
