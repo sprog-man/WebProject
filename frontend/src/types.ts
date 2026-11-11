@@ -1,0 +1,115 @@
+export type ThemeMode = 'ink' | 'paper' | 'forest'
+export type FontStyle = 'serif' | 'sans'
+
+export interface ThemeSpec {
+  mode: ThemeMode
+  accent: string
+  titleScale: number
+  bodyScale: number
+  radius: number
+  font: FontStyle
+  spacing: number
+}
+
+export interface ImageRef {
+  src: string
+  alt?: string
+  fit?: 'cover' | 'contain'
+  assetId?: string
+}
+
+export interface SectionSpec {
+  id: string
+  component:
+    | 'nav.basic'
+    | 'hero.split'
+    | 'gallery.grid'
+    | 'stats.row'
+    | 'cta.banner'
+    | 'footer.basic'
+  props: Record<string, any>
+  layout?: Record<string, any>
+}
+
+export interface PageSpec {
+  version: number
+  meta: {
+    title: string
+    description?: string
+  }
+  theme: ThemeSpec
+  sections: SectionSpec[]
+  fieldMeta?: Record<string, { source?: 'ai' | 'user'; locked?: boolean }>
+}
+
+export interface User {
+  id: string
+  email: string
+  displayName: string
+  createdAt?: string | null
+}
+
+export interface ChatMessage {
+  id: string
+  role: 'user' | 'assistant'
+  content: string
+  revisionNumber?: number | null
+  createdAt: string
+}
+
+export interface ProjectSummary {
+  id: string
+  name: string
+  version: number
+  spec: PageSpec
+  createdAt: string
+  updatedAt: string
+}
+
+export interface ProjectDetail {
+  id: string
+  name: string
+  version: number
+  spec: PageSpec
+  messages: ChatMessage[]
+  latestRevision: number | null
+  createdAt: string
+  updatedAt: string
+}
+
+export interface SaveDraftResponse {
+  version: number
+  updatedAt: string
+}
+
+export interface SendMessageResponse {
+  userMessage: ChatMessage
+  assistantMessage: ChatMessage
+  spec: PageSpec
+  version: number
+  revisionNumber: number | null
+  changed: boolean
+}
+
+export interface AssetResponse {
+  id: string
+  url: string
+  name: string
+  mimeType: string
+  size: number
+  width: number | null
+  height: number | null
+}
+
+export type SelectionKind = 'text' | 'image'
+
+export interface Selection {
+  sectionId: string
+  path: string
+  kind: SelectionKind
+  label: string
+}
+
+export type InspectorTab = 'content' | 'style' | 'image' | 'layout'
+export type DeviceMode = 'desktop' | 'tablet' | 'mobile'
+export type SaveStatus = 'saved' | 'dirty' | 'saving' | 'error'

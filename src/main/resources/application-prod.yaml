@@ -1,0 +1,28 @@
+spring:
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/webporduce}
+    username: ${DB_USERNAME:webporduce}
+    password: ${DB_PASSWORD:webporduce}
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: validate
+  flyway:
+    enabled: true
+
+server:
+  compression:
+    enabled: true
+  forward-headers-strategy: framework
+  servlet:
+    session:
+      cookie:
+        secure: ${SESSION_COOKIE_SECURE:false}
+
+app:
+  storage:
+    root: ${APP_STORAGE_ROOT:/app/uploads}
+
+logging:
+  level:
+    com.xiaoliu.webporduce: info

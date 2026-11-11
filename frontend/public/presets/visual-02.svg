@@ -1,0 +1,47 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 1500" preserveAspectRatio="xMidYMid slice">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#201a16"/>
+      <stop offset="1" stop-color="#0c0a09"/>
+    </linearGradient>
+    <linearGradient id="arch" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#f4c9a2"/>
+      <stop offset=".22" stop-color="#c6885d"/>
+      <stop offset=".42" stop-color="#5e3324"/>
+      <stop offset=".6" stop-color="#e5b083"/>
+      <stop offset=".82" stop-color="#7a432d"/>
+      <stop offset="1" stop-color="#f7d5b2"/>
+    </linearGradient>
+    <linearGradient id="arch2" x1="1" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#ffdcba"/>
+      <stop offset=".45" stop-color="#a7603f"/>
+      <stop offset=".7" stop-color="#4b261c"/>
+      <stop offset="1" stop-color="#e9b283"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="50%" cy="38%" r="52%">
+      <stop offset="0" stop-color="#ffc792" stop-opacity=".4"/>
+      <stop offset="1" stop-color="#ffc792" stop-opacity="0"/>
+    </radialGradient>
+    <filter id="grain">
+      <feTurbulence type="fractalNoise" baseFrequency=".75" numOctaves="3" stitchTiles="stitch"/>
+      <feColorMatrix type="saturate" values="0"/>
+      <feComponentTransfer><feFuncA type="linear" slope=".12"/></feComponentTransfer>
+    </filter>
+    <filter id="blur"><feGaussianBlur stdDeviation="40"/></filter>
+  </defs>
+  <rect width="1200" height="1500" fill="url(#bg)"/>
+  <ellipse cx="600" cy="610" rx="420" ry="330" fill="url(#glow)" filter="url(#blur)"/>
+  <path d="M250 1330V760c0-195 157-352 350-352s350 157 350 352v570" fill="none" stroke="url(#arch)" stroke-width="76"/>
+  <path d="M338 1330V782c0-145 117-262 262-262s262 117 262 262v548" fill="none" stroke="#15100d" stroke-width="34"/>
+  <path d="M402 1330V800c0-110 89-199 198-199s198 89 198 199v530" fill="none" stroke="url(#arch2)" stroke-width="7"/>
+  <path d="M470 1330V818c0-72 58-130 130-130s130 58 130 130v512" fill="none" stroke="#f7d5b2" stroke-opacity=".22" stroke-width="1.5"/>
+  <line x1="0" y1="1332" x2="1200" y2="1332" stroke="#f7d5b2" stroke-opacity=".2"/>
+  <path d="M0 1388h1200" stroke="#f7d5b2" stroke-opacity=".07"/>
+  <g fill="#f7d5b2" opacity=".5">
+    <circle cx="156" cy="1180" r="2"/>
+    <circle cx="1042" cy="1050" r="2.5"/>
+    <circle cx="960" cy="300" r="1.6"/>
+    <circle cx="210" cy="370" r="1.6"/>
+  </g>
+  <rect width="1200" height="1500" filter="url(#grain)" opacity=".6"/>
+</svg>

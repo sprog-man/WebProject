@@ -1,0 +1,131 @@
+{
+  "version": 1,
+  "meta": {
+    "title": "Aurora 品牌官网",
+    "description": "Aurora 独立创意工作室，为品牌构建安静而有力量的第一印象。"
+  },
+  "theme": {
+    "mode": "ink",
+    "accent": "#ff6b3d",
+    "titleScale": 100,
+    "bodyScale": 100,
+    "radius": 18,
+    "font": "serif",
+    "spacing": 100
+  },
+  "sections": [
+    {
+      "id": "nav",
+      "component": "nav.basic",
+      "props": {
+        "brand": "AURORA",
+        "links": ["作品", "工作室", "手记"],
+        "note": "EST. 2018 · SHANGHAI"
+      }
+    },
+    {
+      "id": "hero",
+      "component": "hero.split",
+      "props": {
+        "eyebrow": "AURORA STUDIO — 独立创意工作室",
+        "title": "让灵感，\n先于语言抵达。",
+        "subtitle": "我们以设计与技术为介质，为品牌构建安静而有力量的第一印象。",
+        "ctaLabel": "预约一次对话",
+        "secondaryLabel": "查看作品集",
+        "image": {
+          "src": "/presets/visual-01.svg",
+          "alt": "Aurora 品牌抽象视觉",
+          "fit": "cover"
+        }
+      },
+      "layout": {
+        "align": "left",
+        "mediaSide": "right"
+      }
+    },
+    {
+      "id": "gallery",
+      "component": "gallery.grid",
+      "props": {
+        "eyebrow": "SELECTED WORK",
+        "title": "为品牌留下\n被记住的第一眼。",
+        "subtitle": "从视觉识别到数字体验，我们和品牌一起完成那些值得被反复观看的细节。",
+        "items": [
+          {
+            "image": {
+              "src": "/presets/visual-02.svg",
+              "alt": "Halo 品牌项目",
+              "fit": "cover"
+            },
+            "tag": "品牌视觉",
+            "title": "Halo / 2025",
+            "caption": "从一枚标记开始的完整品牌语言。"
+          },
+          {
+            "image": {
+              "src": "/presets/visual-03.svg",
+              "alt": "Field Notes 产品发布",
+              "fit": "cover"
+            },
+            "tag": "数字体验",
+            "title": "Field Notes / 2025",
+            "caption": "把安静的材质感带进屏幕。"
+          },
+          {
+            "image": {
+              "src": "/presets/visual-04.svg",
+              "alt": "Mono Studio 网站",
+              "fit": "cover"
+            },
+            "tag": "网站设计",
+            "title": "Mono Studio / 2026",
+            "caption": "克制的留白，与恰到好处的动作。"
+          }
+        ]
+      },
+      "layout": {
+        "columns": 3
+      }
+    },
+    {
+      "id": "stats",
+      "component": "stats.row",
+      "props": {
+        "items": [
+          {
+            "value": "120+",
+            "label": "品牌的共同选择"
+          },
+          {
+            "value": "08",
+            "label": "年持续创作"
+          },
+          {
+            "value": "4.9",
+            "label": "客户平均评分"
+          }
+        ]
+      }
+    },
+    {
+      "id": "cta",
+      "component": "cta.banner",
+      "props": {
+        "eyebrow": "START A CONVERSATION",
+        "title": "有一个想法，\n想让它先被看见？",
+        "subtitle": "告诉我们你正在做的事，剩下的交给 Aurora 与 Aster。",
+        "ctaLabel": "开始一次对话"
+      }
+    },
+    {
+      "id": "footer",
+      "component": "footer.basic",
+      "props": {
+        "brand": "AURORA",
+        "note": "Aurora Studio · Independent creative practice",
+        "copyright": "© 2026 Aurora Studio. All rights reserved."
+      }
+    }
+  ],
+  "fieldMeta": {}
+}
