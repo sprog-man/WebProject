@@ -108,16 +108,15 @@ java -jar target/WebPorduce-0.0.1-SNAPSHOT.jar
 
 ### 本地使用 PostgreSQL
 
-项目已提供 `local-postgres` profile，本地切 PostgreSQL 只需要数据库密码，不需要填 `APP_AI_ENCRYPTION_KEY`：
+项目已提供 `local-postgres` profile，本地切 PostgreSQL 只需要在本地 YAML 里填数据库密码，不需要填 `APP_AI_ENCRYPTION_KEY`：
 
+- 本地密码文件：`config/application-local-postgres.yaml`
+- 模板：`config/application-local-postgres.yaml.example`
 - IntelliJ 运行配置：`.run/WebPorduce PostgreSQL.run.xml`
-- CMD 脚本：`start-postgres.cmd`
 
-IntelliJ 中选择 `WebPorduce PostgreSQL`，把 `DB_PASSWORD` 填成你的 PostgreSQL 密码后运行即可。脚本方式会提示输入密码：
+把 `config/application-local-postgres.yaml` 里的 `password` 改成你的 PostgreSQL 密码，然后在 IntelliJ 中选择 `WebPorduce PostgreSQL` 运行即可。
 
-```cmd
-start-postgres.cmd
-```
+这个本地文件已被 `.gitignore` 忽略，不会提交到 Git。也可以不用该文件，改用 `DB_PASSWORD` 环境变量。
 
 首次启动时 Flyway 会自动建表。注意：H2 里的旧账号和项目不会自动迁移到 PostgreSQL。
 
@@ -162,7 +161,8 @@ docker compose up --build
 | --- | --- | --- |
 | `SPRING_PROFILES_ACTIVE` | `dev` | `dev`（H2）/ `local-postgres`（本地 PostgreSQL）/ `prod`（生产） |
 | `DB_URL` | `jdbc:postgresql://localhost:5432/webporduce` | 数据库地址 |
-| `DB_USERNAME` / `DB_PASSWORD` | `webporduce` | 数据库账号；使用 `local-postgres` 时启动前填密码 |
+| `DB_USERNAME` | `webporduce` | 数据库账号 |
+| `DB_PASSWORD` | 见 `config/application-local-postgres.yaml` | 本地 PostgreSQL 密码；也可用环境变量 |
 | `APP_STORAGE_ROOT` | `./data/uploads` | 上传文件目录 |
 | `APP_AI_ENCRYPTION_KEY` | 空（开发环境有内置回退） | 加密用户 AI Key，生产必填，至少 16 字符 |
 | `AI_PROVIDER` | `mock` | `mock` 或 `deepseek`（服务端兜底） |
