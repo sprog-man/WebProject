@@ -170,7 +170,7 @@ export function ImageGenerationPanel() {
         )}
 
         <p className="image-gen-note">
-          文本 AI 已经写好每张图的提示词。默认只勾选首屏，确认后再生成。每张图片都可能产生费用，生成失败会保留当前图片。
+          文本 AI 会为每张图写好提示词，也可以在这里修改。默认只勾选首屏，确认后再生成。每张图片都可能产生费用，生成失败会保留当前图片。
         </p>
 
         {activeCount > 0 && (

@@ -153,6 +153,16 @@ public class ImageJobService {
     }
 
     private void enqueue(UUID jobId) {
-        imageTaskExecutor.execute(() -> worker.run(jobId));
+        try {
+            imageTaskExecutor.execute(() -> worker.run(jobId));
+        } catch (RuntimeException exception) {
+            // 队列满时不能把任务永远留在 PENDING，用户需要看到可重试的失败原因。
+            jobRepository.findById(jobId).ifPresent(job -> {
+                if (job.isActive()) {
+                    job.markFailed("图片任务队列繁忙，请稍后重试。");
+                    jobRepository.save(job);
+                }
+            });
+        }
     }
 }
