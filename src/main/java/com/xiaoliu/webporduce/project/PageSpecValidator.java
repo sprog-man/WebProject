@@ -17,6 +17,9 @@ public class PageSpecValidator {
             "hero.split",
             "gallery.grid",
             "stats.row",
+            "feature.cards",
+            "menu.list",
+            "quote.block",
             "cta.banner",
             "footer.basic"
     );
@@ -83,7 +86,7 @@ public class PageSpecValidator {
             invalid("主题格式不正确");
         }
         String mode = theme.path("mode").asText("");
-        if (!Set.of("ink", "paper", "forest").contains(mode)) {
+        if (!Set.of("ink", "paper", "forest", "ocean", "candy", "mono").contains(mode)) {
             invalid("不支持的主题模式");
         }
         String accent = theme.path("accent").asText("");

@@ -1,11 +1,14 @@
 package com.xiaoliu.webporduce.ai;
 
 import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.node.ObjectNode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import java.util.Objects;
 import java.util.UUID;
 
 @Service
@@ -16,6 +19,7 @@ public class AiService {
     private final MockAiProvider mockAiProvider;
     private final AiProviderFactory providerFactory;
     private final AiConfigService configService;
+    private final ObjectMapper objectMapper;
     private final String providerName;
     private final String systemBaseUrl;
     private final String systemApiKey;
@@ -24,6 +28,7 @@ public class AiService {
     public AiService(MockAiProvider mockAiProvider,
                      AiProviderFactory providerFactory,
                      AiConfigService configService,
+                     ObjectMapper objectMapper,
                      @Value("${app.ai.provider:mock}") String providerName,
                      @Value("${app.ai.deepseek.base-url:https://api.deepseek.com}") String systemBaseUrl,
                      @Value("${app.ai.deepseek.api-key:}") String systemApiKey,
@@ -31,6 +36,7 @@ public class AiService {
         this.mockAiProvider = mockAiProvider;
         this.providerFactory = providerFactory;
         this.configService = configService;
+        this.objectMapper = objectMapper;
         this.providerName = providerName;
         this.systemBaseUrl = systemBaseUrl;
         this.systemApiKey = systemApiKey == null ? "" : systemApiKey.trim();
@@ -38,7 +44,93 @@ public class AiService {
     }
 
     public AiResult generate(UUID ownerId, String projectName, JsonNode currentSpec, String message) {
-        return runWithFallback(ownerId, provider -> provider.generate(projectName, currentSpec, message));
+        AiResult result = runWithFallback(ownerId, provider -> provider.generate(projectName, currentSpec, message));
+        return applyDesignVariety(result, projectName, message);
+    }
+
+    /**
+     * 如果模型没有明确指定版式，给首屏/画廊补一个非默认变体。
+     * 这样即使模型偷懒，也不会每次都落回同一套 split + grid 骨架。
+     */
+    private AiResult applyDesignVariety(AiResult result, String projectName, String message) {
+        JsonNode specNode = result.spec();
+        if (specNode == null || !specNode.isObject()) {
+            return result;
+        }
+        ObjectNode spec = (ObjectNode) specNode.deepCopy();
+        JsonNode sections = spec.path("sections");
+        if (!sections.isArray() || sections.isEmpty()) {
+            return result;
+        }
+
+        int seed = Objects.hash(projectName, message) & 0x7fffffff;
+        String mode = spec.path("theme").path("mode").asText("ink");
+        boolean changed = false;
+
+        for (int index = 0; index < sections.size(); index++) {
+            JsonNode sectionNode = sections.get(index);
+            if (!sectionNode.isObject()) {
+                continue;
+            }
+            ObjectNode section = (ObjectNode) sectionNode;
+            String component = section.path("component").asText("");
+            ObjectNode layout = section.path("layout").isObject()
+                    ? (ObjectNode) section.get("layout")
+                    : objectMapper.createObjectNode();
+
+            if ("hero.split".equals(component)) {
+                String variant = layout.path("variant").asText("");
+                String align = layout.path("align").asText("");
+                if (variant.isBlank() && !"center".equals(align)) {
+                    layout.put("variant", chooseHeroVariant(mode, seed));
+                    changed = true;
+                }
+            } else if ("gallery.grid".equals(component)) {
+                String variant = layout.path("variant").asText("");
+                if (variant.isBlank()) {
+                    layout.put("variant", chooseGalleryVariant(sections, index, seed));
+                    changed = true;
+                }
+            }
+
+            if (layout.size() > 0) {
+                section.set("layout", layout);
+            }
+        }
+
+        return changed
+                ? new AiResult(result.reply(), spec, true, result.provider())
+                : result;
+    }
+
+    private String chooseHeroVariant(String mode, int seed) {
+        return switch (mode) {
+            case "paper", "mono" -> (seed & 1) == 0 ? "center" : "full";
+            case "candy" -> (seed & 1) == 0 ? "full" : "stack";
+            default -> switch (seed % 3) {
+                case 0 -> "full";
+                case 1 -> "center";
+                default -> "stack";
+            };
+        };
+    }
+
+    private String chooseGalleryVariant(JsonNode sections, int index, int seed) {
+        boolean hasFeatureCards = false;
+        for (int previous = 0; previous < index; previous++) {
+            if ("feature.cards".equals(sections.get(previous).path("component").asText(""))) {
+                hasFeatureCards = true;
+                break;
+            }
+        }
+        if (hasFeatureCards) {
+            return "list";
+        }
+        int itemCount = sections.get(index).path("props").path("items").size();
+        if (itemCount >= 3) {
+            return (seed & 1) == 0 ? "masonry" : "list";
+        }
+        return "grid";
     }
 
     public AiResult edit(UUID ownerId, JsonNode currentSpec, String message) {

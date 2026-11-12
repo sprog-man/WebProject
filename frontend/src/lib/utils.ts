@@ -6,6 +6,10 @@ export const PRESETS = [
   { src: '/presets/visual-03.svg', label: '深林切面' },
   { src: '/presets/visual-04.svg', label: '柔雾流体' },
   { src: '/presets/visual-05.svg', label: '日光网格' },
+  { src: '/presets/visual-06.svg', label: '柑橘茶园' },
+  { src: '/presets/visual-07.svg', label: '深海光波' },
+  { src: '/presets/visual-08.svg', label: '糖果气泡' },
+  { src: '/presets/visual-09.svg', label: '科技界面' },
 ]
 
 export function cloneSpec<T>(value: T): T {
@@ -101,6 +105,12 @@ export function sectionLabel(component: SectionSpec['component']): string {
       return '作品画廊'
     case 'stats.row':
       return '数据条'
+    case 'feature.cards':
+      return '特性卡片'
+    case 'menu.list':
+      return '菜单列表'
+    case 'quote.block':
+      return '引用评价'
     case 'cta.banner':
       return '行动号召'
     case 'footer.basic':

@@ -35,6 +35,9 @@ const THEME_MODES = [
   { id: 'ink', label: '午夜', colors: ['#0d0d0f', '#f2efe8'] },
   { id: 'paper', label: '纸张', colors: ['#f1ece2', '#1a1916'] },
   { id: 'forest', label: '森林', colors: ['#0f1f19', '#eef1e6'] },
+  { id: 'ocean', label: '深海', colors: ['#061a24', '#eaf8fb'] },
+  { id: 'candy', label: '糖果', colors: ['#fff1f4', '#29151b'] },
+  { id: 'mono', label: '极简', colors: ['#f4f4f1', '#111111'] },
 ] as const
 
 function FieldEditor({
@@ -651,6 +654,28 @@ export function InspectorPanel({ onClose }: { onClose?: () => void }) {
                   <>
                     <div className="inspector-block">
                       <div className="inspector-block-head">
+                        <strong>首屏版式</strong>
+                        <span>VARIANT</span>
+                      </div>
+                      <Segmented
+                        value={
+                          ['center', 'full', 'stack'].includes(String(selectedSection.layout?.variant))
+                            ? String(selectedSection.layout?.variant)
+                            : 'split'
+                        }
+                        options={[
+                          { value: 'split', label: '左右分栏' },
+                          { value: 'center', label: '居中' },
+                          { value: 'full', label: '全屏大图' },
+                          { value: 'stack', label: '上下堆叠' },
+                        ]}
+                        onChange={(variant) =>
+                          updateSectionLayout(selectedSection.id, { variant })
+                        }
+                      />
+                    </div>
+                    <div className="inspector-block">
+                      <div className="inspector-block-head">
                         <strong>文字对齐</strong>
                         <span>ALIGN</span>
                       </div>
@@ -685,9 +710,53 @@ export function InspectorPanel({ onClose }: { onClose?: () => void }) {
                 )}
 
                 {selectedSection.component === 'gallery.grid' && (
+                  <>
+                    <div className="inspector-block">
+                      <div className="inspector-block-head">
+                        <strong>画廊版式</strong>
+                        <span>VARIANT</span>
+                      </div>
+                      <Segmented
+                        value={
+                          ['masonry', 'list'].includes(String(selectedSection.layout?.variant))
+                            ? String(selectedSection.layout?.variant)
+                            : 'grid'
+                        }
+                        options={[
+                          { value: 'grid', label: '网格' },
+                          { value: 'masonry', label: '错落' },
+                          { value: 'list', label: '列表' },
+                        ]}
+                        onChange={(variant) =>
+                          updateSectionLayout(selectedSection.id, { variant })
+                        }
+                      />
+                    </div>
+                    {selectedSection.layout?.variant !== 'list' && (
+                      <div className="inspector-block">
+                        <div className="inspector-block-head">
+                          <strong>作品列数</strong>
+                          <span>COLUMNS</span>
+                        </div>
+                        <Segmented
+                          value={String(selectedSection.layout?.columns || 3)}
+                          options={[
+                            { value: '2', label: '两列' },
+                            { value: '3', label: '三列' },
+                          ]}
+                          onChange={(columns) =>
+                            updateSectionLayout(selectedSection.id, { columns: Number(columns) })
+                          }
+                        />
+                      </div>
+                    )}
+                  </>
+                )}
+
+                {selectedSection.component === 'feature.cards' && (
                   <div className="inspector-block">
                     <div className="inspector-block-head">
-                      <strong>作品列数</strong>
+                      <strong>卡片列数</strong>
                       <span>COLUMNS</span>
                     </div>
                     <Segmented
@@ -695,6 +764,7 @@ export function InspectorPanel({ onClose }: { onClose?: () => void }) {
                       options={[
                         { value: '2', label: '两列' },
                         { value: '3', label: '三列' },
+                        { value: '4', label: '四列' },
                       ]}
                       onChange={(columns) =>
                         updateSectionLayout(selectedSection.id, { columns: Number(columns) })
@@ -703,7 +773,28 @@ export function InspectorPanel({ onClose }: { onClose?: () => void }) {
                   </div>
                 )}
 
-                {!['hero.split', 'gallery.grid'].includes(selectedSection.component) && (
+                {selectedSection.component === 'menu.list' && (
+                  <div className="inspector-block">
+                    <div className="inspector-block-head">
+                      <strong>菜单列数</strong>
+                      <span>COLUMNS</span>
+                    </div>
+                    <Segmented
+                      value={String(selectedSection.layout?.columns || 2)}
+                      options={[
+                        { value: '1', label: '单列' },
+                        { value: '2', label: '双列' },
+                      ]}
+                      onChange={(columns) =>
+                        updateSectionLayout(selectedSection.id, { columns: Number(columns) })
+                      }
+                    />
+                  </div>
+                )}
+
+                {!['hero.split', 'gallery.grid', 'feature.cards', 'menu.list'].includes(
+                  selectedSection.component,
+                ) && (
                   <div className="inspector-tip">
                     <IconLayout />
                     <p>这个区块暂时没有单独的布局选项。可以回到对话面板，让 Aster 调整整体间距或隐藏区块。</p>

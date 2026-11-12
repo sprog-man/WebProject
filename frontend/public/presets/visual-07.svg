@@ -1,0 +1,46 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 1500" preserveAspectRatio="xMidYMid slice">
+  <defs>
+    <linearGradient id="bg07" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#04151f"/>
+      <stop offset="55%" stop-color="#072c3e"/>
+      <stop offset="1" stop-color="#02080d"/>
+    </linearGradient>
+    <linearGradient id="wave07a" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#0f6d86" stop-opacity=".18"/>
+      <stop offset="50%" stop-color="#63d7e8" stop-opacity=".55"/>
+      <stop offset="1" stop-color="#0f6d86" stop-opacity=".08"/>
+    </linearGradient>
+    <linearGradient id="wave07b" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#225d91" stop-opacity=".18"/>
+      <stop offset="55%" stop-color="#89a8ff" stop-opacity=".35"/>
+      <stop offset="1" stop-color="#225d91" stop-opacity=".06"/>
+    </linearGradient>
+    <radialGradient id="glow07" cx="50%" cy="38%" r="52%">
+      <stop offset="0" stop-color="#b8fbff" stop-opacity=".55"/>
+      <stop offset="100%" stop-color="#b8fbff" stop-opacity="0"/>
+    </radialGradient>
+    <filter id="blur07" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="42"/>
+    </filter>
+    <filter id="grain07">
+      <feTurbulence type="fractalNoise" baseFrequency=".8" numOctaves="3" stitchTiles="stitch"/>
+      <feColorMatrix type="saturate" values="0"/>
+      <feComponentTransfer><feFuncA type="linear" slope=".12"/></feComponentTransfer>
+    </filter>
+  </defs>
+  <rect width="1200" height="1500" fill="url(#bg07)"/>
+  <ellipse cx="600" cy="620" rx="390" ry="360" fill="url(#glow07)" filter="url(#blur07)"/>
+  <circle cx="600" cy="600" r="235" fill="none" stroke="#a8f6ff" stroke-opacity=".5" stroke-width="1.2"/>
+  <circle cx="600" cy="600" r="310" fill="none" stroke="#a8f6ff" stroke-opacity=".18"/>
+  <path d="M-80 980c180-150 310-30 470-140 190-130 310-20 470-140 140-105 250-40 420-140v700H-80z" fill="url(#wave07a)"/>
+  <path d="M-80 1140c210-180 360-20 540-160 180-140 310-10 500-150 120-90 220-30 360-110v640H-80z" fill="url(#wave07b)" opacity=".8"/>
+  <path d="M-80 1280c230-160 390-10 600-150 190-125 320-20 520-140 90-55 160-30 260-70v580H-80z" fill="#04121a" opacity=".65"/>
+  <g fill="#c9fbff">
+    <circle cx="220" cy="290" r="3"/>
+    <circle cx="975" cy="380" r="2"/>
+    <circle cx="1040" cy="760" r="2.5"/>
+    <circle cx="260" cy="830" r="2"/>
+    <circle cx="770" cy="230" r="1.8"/>
+  </g>
+  <rect width="1200" height="1500" filter="url(#grain07)" opacity=".55"/>
+</svg>

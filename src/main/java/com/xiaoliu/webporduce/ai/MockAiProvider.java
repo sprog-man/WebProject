@@ -158,17 +158,43 @@ public class MockAiProvider implements AiProvider {
     }
 
     private void customizeForBrief(JsonNode spec, String brief) {
-        String text = brief == null ? "" : brief;
+        String text = brief == null ? "" : brief.toLowerCase(Locale.ROOT);
         ObjectNode meta = (ObjectNode) spec.path("meta");
+        boolean foodOrDrink = text.contains("奶茶") || text.contains("茶饮") || text.contains("餐饮")
+                || text.contains("甜品") || text.contains("烘焙");
         if (text.contains("咖啡")) {
             meta.put("description", "一间独立咖啡品牌，安静、有手作感。");
             setHero(spec, "MORNING", "把一杯咖啡，\n做成一段日常。", "从豆子到杯子，我们相信好的日常不需要大声解释。", "#c58a5a");
+            setTheme(spec, "paper");
+            setMenu(spec, "COFFEE MENU", "今日咖啡单", "豆子每天换，风味跟着季节走。", new String[][]{
+                    {"手冲单品", "当日单一产区，干净、有层次。", "¥32", "今日"},
+                    {"燕麦拿铁", "坚果调性，口感轻盈。", "¥28"},
+                    {"冷萃美式", "低温慢萃，清醒但不尖锐。", "¥26"}
+            });
+        } else if (foodOrDrink) {
+            meta.put("description", "一间有果香和山野气的茶饮品牌。");
+            setHero(spec, "SHANLAN", "山野的清气，\n装进这一杯。", "当季水果、原叶茶和一点克制，做一杯喝完会想念的茶。", "#5aad8a");
+            setTheme(spec, "candy");
+            setMenu(spec, "SIGNATURE MENU", "本季茶单", "门店每日限量，卖完就等明天。", new String[][]{
+                    {"山岚茉莉", "茉莉绿茶、青提、少量海盐。", "¥22", "招牌"},
+                    {"青梅乌龙", "碳焙乌龙、青梅、气泡。", "¥24", "限定"},
+                    {"桂花米酿", "桂花乌龙、米酿、鲜奶。", "¥26"}
+            });
         } else if (text.contains("摄影") || text.contains("作品集")) {
             meta.put("description", "以图像与留白为主角的摄影工作室。");
             setHero(spec, "FRAME", "光落下的地方，\n就是作品开始的地方。", "商业摄影、编辑影像与长期视觉项目。", "#e9c46a");
+            setTheme(spec, "paper");
+            setHeroVariant(spec, "full");
+            setGalleryVariant(spec, "masonry");
         } else if (text.contains("ai") || text.contains("人工智能") || text.contains("科技")) {
             meta.put("description", "一个有未来感但不冰冷的 AI 产品。");
             setHero(spec, "NOVA", "让复杂的技术，\n变得可以触摸。", "为思考留出空间，让工具安静地退到内容之后。", "#75d4e8");
+            setTheme(spec, "ocean");
+            setFeatures(spec, "BUILT FOR TEAMS", "把重复工作，\n交给系统。", "让团队把时间花在真正需要判断的地方。", new String[][]{
+                    {"01", "可观测", "每一步都有输入、输出和耗时。"},
+                    {"02", "可回滚", "工作流版本化，随时回到稳定状态。"},
+                    {"03", "可扩展", "按团队自己的方式组合和扩展。"}
+            });
         }
     }
 
@@ -184,11 +210,97 @@ public class MockAiProvider implements AiProvider {
                 props.put("eyebrow", brand + " STUDIO — 独立创意工作室");
                 props.put("title", title);
                 props.put("subtitle", subtitle);
+                props.put("mediaLabel", brand + " / 2026");
             }
             if ("footer.basic".equals(component)) {
                 ((ObjectNode) section.path("props")).put("brand", brand);
             }
         }
+    }
+
+    private void setTheme(JsonNode spec, String mode) {
+        ((ObjectNode) spec.path("theme")).put("mode", mode);
+    }
+
+    private void setHeroVariant(JsonNode spec, String variant) {
+        setVariant(spec, "hero.split", variant);
+    }
+
+    private void setGalleryVariant(JsonNode spec, String variant) {
+        setVariant(spec, "gallery.grid", variant);
+    }
+
+    private void setVariant(JsonNode spec, String component, String variant) {
+        for (JsonNode sectionNode : spec.path("sections")) {
+            if (!(sectionNode instanceof ObjectNode section)) {
+                continue;
+            }
+            if (component.equals(section.path("component").asText())) {
+                ObjectNode layout = section.path("layout").isObject()
+                        ? (ObjectNode) section.get("layout")
+                        : objectMapper.createObjectNode();
+                layout.put("variant", variant);
+                section.set("layout", layout);
+                return;
+            }
+        }
+    }
+
+    private void setMenu(JsonNode spec, String eyebrow, String title, String subtitle, String[][] items) {
+        ArrayNode nodes = objectMapper.createArrayNode();
+        for (String[] item : items) {
+            ObjectNode node = objectMapper.createObjectNode();
+            node.put("name", item[0]);
+            node.put("description", item[1]);
+            node.put("price", item[2]);
+            if (item.length > 3 && !item[3].isBlank()) {
+                node.put("tag", item[3]);
+            }
+            nodes.add(node);
+        }
+        ObjectNode props = objectMapper.createObjectNode();
+        props.put("eyebrow", eyebrow);
+        props.put("title", title);
+        props.put("subtitle", subtitle);
+        props.set("items", nodes);
+        ObjectNode layout = objectMapper.createObjectNode();
+        layout.put("columns", 2);
+        replaceSection(spec, "gallery.grid", "menu.list", props, layout);
+    }
+
+    private void setFeatures(JsonNode spec, String eyebrow, String title, String subtitle, String[][] items) {
+        ArrayNode nodes = objectMapper.createArrayNode();
+        for (String[] item : items) {
+            ObjectNode node = objectMapper.createObjectNode();
+            node.put("tag", item[0]);
+            node.put("title", item[1]);
+            node.put("description", item[2]);
+            nodes.add(node);
+        }
+        ObjectNode props = objectMapper.createObjectNode();
+        props.put("eyebrow", eyebrow);
+        props.put("title", title);
+        props.put("subtitle", subtitle);
+        props.set("items", nodes);
+        ObjectNode layout = objectMapper.createObjectNode();
+        layout.put("columns", 3);
+        replaceSection(spec, "gallery.grid", "feature.cards", props, layout);
+    }
+
+    private boolean replaceSection(JsonNode spec, String fromComponent, String toComponent,
+                                   ObjectNode props, ObjectNode layout) {
+        for (JsonNode sectionNode : spec.path("sections")) {
+            if (!(sectionNode instanceof ObjectNode section)) {
+                continue;
+            }
+            if (fromComponent.equals(section.path("component").asText())) {
+                section.put("component", toComponent);
+                section.set("props", props);
+                section.set("layout", layout);
+                return true;
+            }
+        }
+        return false;
     }
 
     private String detectAccent(String text) {

@@ -7,9 +7,12 @@
 
 可用的组件（component）：
 - nav.basic：页面顶部导航。props: brand(string), links(string[]), note(string)
-- hero.split：首屏。props: eyebrow, title, subtitle, ctaLabel, secondaryLabel, image(ImageRef)；layout: align("left"|"center"), mediaSide("left"|"right")
-- gallery.grid：作品/图片网格。props: eyebrow, title, subtitle, items(数组)，每个 item: { image(ImageRef), tag, title, caption }；layout: columns(2|3)
+- hero.split：首屏。props: eyebrow, title, subtitle, ctaLabel, secondaryLabel, image(ImageRef), mediaLabel(可选，必须写本品牌自己的短语，不要写 AURORA)；layout: variant("split"|"center"|"full"|"stack"), align("left"|"center"), mediaSide("left"|"right")
+- gallery.grid：作品/图片网格。props: eyebrow, title, subtitle, items(数组)，每个 item: { image(ImageRef), tag, title, caption }；layout: variant("grid"|"masonry"|"list"), columns(2|3)
 - stats.row：数据条。props: items(数组)，每个 item: { value, label }
+- feature.cards：特性/服务卡片。props: eyebrow, title, subtitle, items(数组)，每个 item: { tag(可选), title, description }；layout: columns(2|3|4)
+- menu.list：菜单/产品列表。props: eyebrow, title, subtitle, items(数组)，每个 item: { name, description, price, tag(可选) }；layout: columns(1|2)
+- quote.block：引用/评价。props: quote, author, role
 - cta.banner：行动号召。props: eyebrow, title, subtitle, ctaLabel
 - footer.basic：页脚。props: brand, note, copyright
 
@@ -20,6 +23,11 @@ ImageRef 结构：
 /presets/visual-02.svg
 /presets/visual-03.svg
 /presets/visual-04.svg
+/presets/visual-05.svg
+/presets/visual-06.svg
+/presets/visual-07.svg
+/presets/visual-08.svg
+/presets/visual-09.svg
 用户已上传的图片会以 /api/assets/{id}/content 形式出现在现有 PageSpec 中，编辑时必须保留原值，除非用户明确要求换图。
 
 PageSpec 结构：
@@ -27,7 +35,7 @@ PageSpec 结构：
   "version": 1,
   "meta": { "title": string, "description": string },
   "theme": {
-    "mode": "ink" | "paper" | "forest",
+    "mode": "ink" | "paper" | "forest" | "ocean" | "candy" | "mono",
     "accent": "#RRGGBB",
     "titleScale": 60-160,
     "bodyScale": 60-160,
@@ -61,6 +69,28 @@ Section 结构：
     { "op": "replace", "path": "/theme/accent", "value": "#ff6b3d" }
   ]
 }
+
+生成模式的设计规则：
+- 先判断行业、受众和品牌气质，再决定主题、字体、强调色和区块顺序。不要每次都套同一套结构。
+- 不要固定使用 nav → hero → gallery → stats → cta → footer。根据行业选择最合适的区块：
+  - 茶饮、咖啡、餐饮、烘焙：nav、hero、menu.list、quote.block、stats.row、cta、footer。
+  - SaaS、AI、工具、企业服务：nav、hero、feature.cards、stats.row、quote.block、cta、footer。
+  - 摄影、设计、艺术、作品集：nav、hero、gallery.grid、quote.block、cta、footer。
+  - 品牌官网、工作室、咨询：nav、hero、feature.cards 或 gallery.grid、quote.block、cta、footer。
+- 每页使用 4-8 个区块，不要机械凑满 6 个。首屏之后不要总是接一个三列图片画廊。
+- 每页至少使用一个非默认布局：hero 的 center/full/stack，或 gallery 的 masonry/list。
+- 首屏不要永远左文右图。品牌感强、图片质量高时优先 full；产品/服务说明优先 split；需要强调一句话时用 center；移动端阅读优先 stack。
+- 主题模式不要默认 ink 或 paper。根据行业选择：
+  - 茶饮、甜品、年轻品牌：candy；
+  - 科技、AI、清洁能源：ocean 或 mono；
+  - 摄影、建筑、奢侈品：mono 或 paper；
+  - 户外、自然、健康：forest；
+  - 夜店、潮流、时尚：ink。
+- 强调色必须来自品牌或行业，不要默认 #ff6b3d。避免所有页面都用同一个橙色。
+- 不要复用默认模板的文案、标题句式或“Aurora”字样。标题要像这个品牌自己会说的话，不要写成通用营销套话。
+- `mediaLabel` 只写本品牌的短句；没有合适内容时留空，绝对不要用 AURORA。
+- 同一页不要重复使用同一张内置图片；图片 alt 必须描述该页面的业务内容，而不是抽象视觉名称。
+- 菜单、产品、价格适合 menu.list；服务能力、卖点适合 feature.cards；作品、空间、人像适合 gallery.grid；评价、品牌宣言适合 quote.block。
 
 编辑模式的规则：
 - 只修改用户要求的部分，尽量保留其他已存在的文案、图片和结构。

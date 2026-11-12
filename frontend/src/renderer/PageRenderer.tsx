@@ -230,13 +230,24 @@ function NavSection({ section, editMode, selection, onSelect, onCommitText }: Se
 
 function HeroSection({ section, editMode, selection, onSelect, onCommitText }: SectionProps) {
   const props = section.props
-  const align = section.layout?.align === 'center' ? 'center' : 'left'
+  const variantValue = String(section.layout?.variant || '')
+  const variant = ['center', 'full', 'stack'].includes(variantValue) ? variantValue : 'split'
+  const isCenter = section.layout?.align === 'center' || variant === 'center'
+  const isFull = variant === 'full'
+  const isStack = variant === 'stack'
   const mediaSide = section.layout?.mediaSide === 'left' ? 'left' : 'right'
   const isSelected = (path: string) => selection?.sectionId === section.id && selection.path === path
+  const className = [
+    'page-hero',
+    isCenter ? 'is-center' : '',
+    mediaSide === 'left' ? 'media-left' : '',
+    isFull ? 'is-full' : '',
+    isStack ? 'is-stack' : '',
+  ]
+    .filter(Boolean)
+    .join(' ')
   return (
-    <section
-      className={`page-hero ${align === 'center' ? 'is-center' : ''} ${mediaSide === 'left' ? 'media-left' : ''}`}
-    >
+    <section className={className}>
       <div className="page-hero-copy">
         <EditableText
           as="div"
@@ -313,7 +324,7 @@ function HeroSection({ section, editMode, selection, onSelect, onCommitText }: S
           selected={isSelected('props.image')}
           onSelect={onSelect}
         />
-        <span className="page-media-label">{props.mediaLabel || 'Aurora / 2026'}</span>
+        <span className="page-media-label">{props.mediaLabel || 'STUDIO / 2026'}</span>
       </div>
     </section>
   )
@@ -323,6 +334,8 @@ function GallerySection({ section, editMode, selection, onSelect, onCommitText }
   const props = section.props
   const items: any[] = Array.isArray(props.items) ? props.items : []
   const columns = Number(section.layout?.columns) === 2 ? 2 : 3
+  const variantValue = String(section.layout?.variant || '')
+  const variant = ['masonry', 'list'].includes(variantValue) ? variantValue : 'grid'
   const isSelected = (path: string) => selection?.sectionId === section.id && selection.path === path
   return (
     <section className="page-gallery">
@@ -368,7 +381,7 @@ function GallerySection({ section, editMode, selection, onSelect, onCommitText }
           onCommitText={onCommitText}
         />
       </div>
-      <div className="page-gallery-grid" style={{ '--columns': columns } as CSSProperties}>
+      <div className="page-gallery-grid" data-variant={variant} style={{ '--columns': columns } as CSSProperties}>
         {items.map((item, index) => {
           const base = `props.items.${index}`
           return (
@@ -467,6 +480,274 @@ function StatsSection({ section, editMode, selection, onSelect, onCommitText }: 
           </div>
         )
       })}
+    </section>
+  )
+}
+
+function FeatureCardsSection({ section, editMode, selection, onSelect, onCommitText }: SectionProps) {
+  const props = section.props
+  const items: any[] = Array.isArray(props.items) ? props.items : []
+  const rawColumns = Number(section.layout?.columns)
+  const columns = [2, 3, 4].includes(rawColumns) ? rawColumns : 3
+  const isSelected = (path: string) => selection?.sectionId === section.id && selection.path === path
+  return (
+    <section className="page-features">
+      <div className="page-features-head">
+        <div>
+          <EditableText
+            as="div"
+            value={props.eyebrow || ''}
+            sectionId={section.id}
+            path="props.eyebrow"
+            label="特性区眉题"
+            className="page-eyebrow"
+            editMode={editMode}
+            selected={isSelected('props.eyebrow')}
+            onSelect={onSelect}
+            onCommitText={onCommitText}
+          />
+          <EditableText
+            as="h2"
+            value={props.title || ''}
+            sectionId={section.id}
+            path="props.title"
+            label="特性区标题"
+            className="page-section-title"
+            multiline
+            editMode={editMode}
+            selected={isSelected('props.title')}
+            onSelect={onSelect}
+            onCommitText={onCommitText}
+          />
+        </div>
+        <EditableText
+          as="p"
+          value={props.subtitle || ''}
+          sectionId={section.id}
+          path="props.subtitle"
+          label="特性区说明"
+          className="page-section-subtitle"
+          multiline
+          editMode={editMode}
+          selected={isSelected('props.subtitle')}
+          onSelect={onSelect}
+          onCommitText={onCommitText}
+        />
+      </div>
+      <div className="page-feature-grid" style={{ '--columns': columns } as CSSProperties}>
+        {items.map((item, index) => {
+          const base = `props.items.${index}`
+          return (
+            <article className="page-feature-card" key={index}>
+              <span className="page-feature-index">{String(index + 1).padStart(2, '0')}</span>
+              {item.tag ? (
+                <EditableText
+                  as="span"
+                  value={item.tag}
+                  sectionId={section.id}
+                  path={`${base}.tag`}
+                  label={`特性 ${index + 1} 标签`}
+                  className="page-feature-tag"
+                  editMode={editMode}
+                  selected={isSelected(`${base}.tag`)}
+                  onSelect={onSelect}
+                  onCommitText={onCommitText}
+                />
+              ) : null}
+              <EditableText
+                as="h3"
+                value={item.title || ''}
+                sectionId={section.id}
+                path={`${base}.title`}
+                label={`特性 ${index + 1} 标题`}
+                className="page-feature-title"
+                editMode={editMode}
+                selected={isSelected(`${base}.title`)}
+                onSelect={onSelect}
+                onCommitText={onCommitText}
+              />
+              <EditableText
+                as="p"
+                value={item.description || ''}
+                sectionId={section.id}
+                path={`${base}.description`}
+                label={`特性 ${index + 1} 描述`}
+                className="page-feature-desc"
+                multiline
+                editMode={editMode}
+                selected={isSelected(`${base}.description`)}
+                onSelect={onSelect}
+                onCommitText={onCommitText}
+              />
+            </article>
+          )
+        })}
+      </div>
+    </section>
+  )
+}
+
+function MenuListSection({ section, editMode, selection, onSelect, onCommitText }: SectionProps) {
+  const props = section.props
+  const items: any[] = Array.isArray(props.items) ? props.items : []
+  const columns = Number(section.layout?.columns) === 1 ? 1 : 2
+  const isSelected = (path: string) => selection?.sectionId === section.id && selection.path === path
+  return (
+    <section className="page-menu">
+      <div className="page-menu-head">
+        <div>
+          <EditableText
+            as="div"
+            value={props.eyebrow || ''}
+            sectionId={section.id}
+            path="props.eyebrow"
+            label="菜单区眉题"
+            className="page-eyebrow"
+            editMode={editMode}
+            selected={isSelected('props.eyebrow')}
+            onSelect={onSelect}
+            onCommitText={onCommitText}
+          />
+          <EditableText
+            as="h2"
+            value={props.title || ''}
+            sectionId={section.id}
+            path="props.title"
+            label="菜单区标题"
+            className="page-section-title"
+            multiline
+            editMode={editMode}
+            selected={isSelected('props.title')}
+            onSelect={onSelect}
+            onCommitText={onCommitText}
+          />
+        </div>
+        <EditableText
+          as="p"
+          value={props.subtitle || ''}
+          sectionId={section.id}
+          path="props.subtitle"
+          label="菜单区说明"
+          className="page-section-subtitle"
+          multiline
+          editMode={editMode}
+          selected={isSelected('props.subtitle')}
+          onSelect={onSelect}
+          onCommitText={onCommitText}
+        />
+      </div>
+      <div className="page-menu-list" style={{ '--columns': columns } as CSSProperties}>
+        {items.map((item, index) => {
+          const base = `props.items.${index}`
+          return (
+            <article className="page-menu-item" key={index}>
+              <div className="page-menu-line">
+                <div className="page-menu-title-wrap">
+                  {item.tag ? (
+                    <EditableText
+                      as="span"
+                      value={item.tag}
+                      sectionId={section.id}
+                      path={`${base}.tag`}
+                      label={`菜单 ${index + 1} 标签`}
+                      className="page-menu-tag"
+                      editMode={editMode}
+                      selected={isSelected(`${base}.tag`)}
+                      onSelect={onSelect}
+                      onCommitText={onCommitText}
+                    />
+                  ) : null}
+                  <EditableText
+                    as="h3"
+                    value={item.name || ''}
+                    sectionId={section.id}
+                    path={`${base}.name`}
+                    label={`菜单 ${index + 1} 名称`}
+                    className="page-menu-name"
+                    editMode={editMode}
+                    selected={isSelected(`${base}.name`)}
+                    onSelect={onSelect}
+                    onCommitText={onCommitText}
+                  />
+                </div>
+                <EditableText
+                  as="span"
+                  value={item.price || ''}
+                  sectionId={section.id}
+                  path={`${base}.price`}
+                  label={`菜单 ${index + 1} 价格`}
+                  className="page-menu-price"
+                  editMode={editMode}
+                  selected={isSelected(`${base}.price`)}
+                  onSelect={onSelect}
+                  onCommitText={onCommitText}
+                />
+              </div>
+              <EditableText
+                as="p"
+                value={item.description || ''}
+                sectionId={section.id}
+                path={`${base}.description`}
+                label={`菜单 ${index + 1} 描述`}
+                className="page-menu-desc"
+                multiline
+                editMode={editMode}
+                selected={isSelected(`${base}.description`)}
+                onSelect={onSelect}
+                onCommitText={onCommitText}
+              />
+            </article>
+          )
+        })}
+      </div>
+    </section>
+  )
+}
+
+function QuoteSection({ section, editMode, selection, onSelect, onCommitText }: SectionProps) {
+  const props = section.props
+  const isSelected = (path: string) => selection?.sectionId === section.id && selection.path === path
+  return (
+    <section className="page-quote">
+      <EditableText
+        as="blockquote"
+        value={props.quote || ''}
+        sectionId={section.id}
+        path="props.quote"
+        label="引用内容"
+        className="page-quote-text"
+        multiline
+        editMode={editMode}
+        selected={isSelected('props.quote')}
+        onSelect={onSelect}
+        onCommitText={onCommitText}
+      />
+      <div className="page-quote-meta">
+        <EditableText
+          as="span"
+          value={props.author || ''}
+          sectionId={section.id}
+          path="props.author"
+          label="引用作者"
+          className="page-quote-author"
+          editMode={editMode}
+          selected={isSelected('props.author')}
+          onSelect={onSelect}
+          onCommitText={onCommitText}
+        />
+        <EditableText
+          as="span"
+          value={props.role || ''}
+          sectionId={section.id}
+          path="props.role"
+          label="引用身份"
+          className="page-quote-role"
+          editMode={editMode}
+          selected={isSelected('props.role')}
+          onSelect={onSelect}
+          onCommitText={onCommitText}
+        />
+      </div>
     </section>
   )
 }
@@ -587,6 +868,12 @@ function SectionRenderer(props: SectionProps) {
       return <GallerySection {...props} />
     case 'stats.row':
       return <StatsSection {...props} />
+    case 'feature.cards':
+      return <FeatureCardsSection {...props} />
+    case 'menu.list':
+      return <MenuListSection {...props} />
+    case 'quote.block':
+      return <QuoteSection {...props} />
     case 'cta.banner':
       return <CtaSection {...props} />
     case 'footer.basic':

@@ -1,4 +1,4 @@
-export type ThemeMode = 'ink' | 'paper' | 'forest'
+export type ThemeMode = 'ink' | 'paper' | 'forest' | 'ocean' | 'candy' | 'mono'
 export type FontStyle = 'serif' | 'sans'
 
 export interface ThemeSpec {
@@ -25,6 +25,9 @@ export interface SectionSpec {
     | 'hero.split'
     | 'gallery.grid'
     | 'stats.row'
+    | 'feature.cards'
+    | 'menu.list'
+    | 'quote.block'
     | 'cta.banner'
     | 'footer.basic'
   props: Record<string, any>
