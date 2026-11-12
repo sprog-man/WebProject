@@ -18,6 +18,7 @@
 | [07-数据模型与安全.md](./07-数据模型与安全.md) | 数据库表、实体关系、认证、Session、CSRF、资源权限和风险 |
 | [08-开发测试与部署.md](./08-开发测试与部署.md) | 本地运行、构建、测试、Docker、PostgreSQL、环境变量和排障 |
 | [09-进度记录与后续规划.md](./09-进度记录与后续规划.md) | 已完成清单、实际验证记录、已知限制、风险和下一阶段计划 |
+| [10-数据库设计与当前状态.md](./10-数据库设计与当前状态.md) | H2 开发库、PostgreSQL 生产库、表结构、关系、迁移步骤和当前实际状态 |
 
 ## 2. 一句话介绍
 
@@ -40,8 +41,8 @@ Aster 是一个「用户与 AI 对话生成页面，再直接点选画布修改�
 
 ### 尚未完成或未验证
 
-- 真实第三方模型生成：尚未配置真实 Key，只验证了错误地址降级和 Mock。
-- Docker / PostgreSQL：已提供 Dockerfile 和 compose 配置，但当前环境没有 Docker，未实际构建容器。
+- 真实第三方模型：已验证 Agnes `agnes-2.5-flash` 的真实生成和局部编辑；DeepSeek / OpenAI / Anthropic / Gemini 仍未实测。
+- PostgreSQL：本机 PostgreSQL 18 已安装、`webporduce` 库已创建，但应用当前仍使用 H2，尚未切换；Docker 未实际构建容器。
 - 真实窄屏回归：当前自动化浏览器窗口无法调整视口，≤900px 和 ≤390px 的完整手工走查仍建议补做。
 - 浏览器端 E2E 自动化：目前只有后端 API 冒烟测试，没有 Playwright/Cypress。
 - 版本历史 UI：数据库已有 `project_revision`，但前端暂未提供历史查看和恢复入口。
@@ -57,7 +58,7 @@ Aster 是一个「用户与 AI 对话生成页面，再直接点选画布修改�
 | AI 配置 | `#/settings/ai`，OpenAI 兼容 / Anthropic / Gemini |
 | API Key | AES-GCM 加密落库，列表只返回末四位 |
 | 开发数据库 | H2 文件库 `./data/webporduce` |
-| 生产数据库 | PostgreSQL 16 |
+| 生产数据库 | PostgreSQL（Docker 配置为 16，本机已安装 18.4） |
 | 页面协议 | `PageSpec` JSON，固定 6 类组件 |
 | 前端路由 | `HashRouter` |
 | 认证方式 | Session + CSRF，不做第三方登录 |
