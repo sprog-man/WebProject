@@ -4,6 +4,8 @@ import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
 import tools.jackson.databind.node.ObjectNode;
 import com.xiaoliu.webporduce.project.PageSpecValidator;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Locale;
 
@@ -12,6 +14,8 @@ import java.util.Locale;
  * 具体供应商只需要实现一次模型 HTTP 调用。
  */
 abstract class AbstractJsonAiProvider implements AiProvider {
+
+    private static final Logger log = LoggerFactory.getLogger(AbstractJsonAiProvider.class);
 
     private static final String CONNECTION_PROBE_PROMPT =
             "这是一次连接测试。请只返回 JSON 对象 {\"ok\":true}，不要返回其他内容。";
@@ -141,8 +145,15 @@ abstract class AbstractJsonAiProvider implements AiProvider {
                     // fall through
                 }
             }
+            log.warn("Unable to parse AI JSON response ({} chars): {}",
+                    cleaned.length(), abbreviate(cleaned));
             throw new AiProviderException("模型返回的 JSON 无法解析", firstFailure);
         }
+    }
+
+    private String abbreviate(String value) {
+        String cleaned = value == null ? "" : value.replaceAll("\\s+", " ").trim();
+        return cleaned.length() > 500 ? cleaned.substring(0, 500) + "…" : cleaned;
     }
 
     protected String requestFailureMessage(int statusCode, String body) {

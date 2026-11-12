@@ -117,6 +117,7 @@ public class ImageJobService {
                 );
             }
 
+            String baseSrc = image.path("src").asText("");
             ImageJob job = new ImageJob(
                     ownerId,
                     projectId,
@@ -125,6 +126,7 @@ public class ImageJobService {
                     path,
                     prompt,
                     PageSpecImages.sha256(prompt),
+                    baseSrc,
                     config.size()
             );
             jobRepository.saveAndFlush(job);

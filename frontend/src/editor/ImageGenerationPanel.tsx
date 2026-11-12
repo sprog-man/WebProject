@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { IconCheck, IconImage, IconLoader, IconSparkles, IconX } from '../components/Icons'
 import { api, ApiError } from '../lib/api'
@@ -39,23 +39,26 @@ export function ImageGenerationPanel() {
   const updateImage = useEditorStore((state) => state.updateImage)
   const [selected, setSelected] = useState<Set<string>>(new Set())
   const [prompts, setPrompts] = useState<Record<string, string>>({})
+  const promptRef = useRef<Record<string, string>>({})
   const [hasConfig, setHasConfig] = useState<boolean | null>(null)
   const [submitting, setSubmitting] = useState(false)
 
   const entries = useMemo(() => (spec ? collectImages(spec) : []), [spec])
   const signature = entries
-    .map((entry) => `${entry.sectionId}:${entry.path}:${entry.image.prompt || ''}`)
+    .map((entry) => `${entry.sectionId}:${entry.path}`)
     .join('|')
 
   useEffect(() => {
     if (!imagePanelOpen) return
     const defaults = new Set<string>()
-    if (entries[0]) defaults.add(`${entries[0].sectionId}:${entries[0].path}`)
+    const hero = entries.find((entry) => entry.label === '首屏主图') || entries[0]
+    if (hero) defaults.add(`${hero.sectionId}:${hero.path}`)
     setSelected(defaults)
     const nextPrompts: Record<string, string> = {}
     for (const entry of entries) {
       nextPrompts[`${entry.sectionId}:${entry.path}`] = entry.image.prompt || ''
     }
+    promptRef.current = nextPrompts
     setPrompts(nextPrompts)
     // Default selection is intentionally reset only when the panel opens, not on every poll.
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -107,7 +110,7 @@ export function ImageGenerationPanel() {
     const items: CreateImageJobInput[] = []
     for (const entry of chosen) {
       const key = keyFor(entry.sectionId, entry.path)
-      const prompt = (prompts[key] ?? entry.image.prompt ?? '').trim()
+      const prompt = (promptRef.current[key] ?? entry.image.prompt ?? '').trim()
       if (!prompt) {
         toast('info', `「${entry.label}」还没有提示词`)
         return
@@ -226,9 +229,17 @@ export function ImageGenerationPanel() {
 
                 <textarea
                   value={prompt}
-                  onChange={(event) =>
-                    setPrompts((current) => ({ ...current, [key]: event.target.value }))
-                  }
+                  onChange={(event) => {
+                    const value = event.target.value
+                    promptRef.current[key] = value
+                    setPrompts((current) => ({ ...current, [key]: value }))
+                  }}
+                  onBlur={(event) => {
+                    const next = event.currentTarget.value.trim()
+                    if (next !== (entry.image.prompt || '').trim()) {
+                      updateImage(entry.sectionId, entry.path, { ...entry.image, prompt: next })
+                    }
+                  }}
                   placeholder="描述主体、构图、光线、材质和色彩。建议使用英文。"
                   maxLength={1500}
                   rows={4}

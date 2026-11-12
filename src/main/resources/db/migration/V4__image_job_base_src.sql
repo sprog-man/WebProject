@@ -1,0 +1,1 @@
+ALTER TABLE image_job ADD COLUMN base_src VARCHAR(500);

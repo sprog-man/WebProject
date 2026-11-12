@@ -199,6 +199,7 @@ export interface ImageJob {
   sectionId: string
   path: string
   prompt: string
+  baseSrc: string | null
   size: string
   status: ImageJobStatus
   assetId: string | null

@@ -137,6 +137,12 @@ public class ImageJobWorker {
             jobRepository.save(job);
             return;
         }
+        String currentSrc = image.path("src").asText("");
+        if (job.getBaseSrc() != null && !job.getBaseSrc().equals(currentSrc)) {
+            job.markSuperseded("图片已被手动更换，生成结果未覆盖当前图片");
+            jobRepository.save(job);
+            return;
+        }
 
         String assetUrl = "/api/assets/" + asset.getId() + "/content";
         PageSpecImages.setImageAsset(image, assetUrl, asset.getId().toString());

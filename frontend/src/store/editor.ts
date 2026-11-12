@@ -106,6 +106,7 @@ function applyCompletedJobs(spec: PageSpec, jobs: ImageJob[]): boolean {
     const image = getAtPath(section, job.path) as ImageRef | undefined
     if (!image || typeof image !== 'object') continue
     if ((image.prompt || '').trim() !== job.prompt.trim()) continue
+    if (job.baseSrc && image.src !== job.baseSrc) continue
     if (image.src === job.assetUrl && image.assetId === job.assetId) continue
     image.src = job.assetUrl
     image.assetId = job.assetId

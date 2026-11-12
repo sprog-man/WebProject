@@ -40,6 +40,9 @@ public class ImageJob {
     @Column(name = "prompt_hash", nullable = false, length = 64)
     private String promptHash;
 
+    @Column(name = "base_src", length = 500)
+    private String baseSrc;
+
     @Column(name = "image_size", nullable = false, length = 32)
     private String imageSize;
 
@@ -75,6 +78,7 @@ public class ImageJob {
                     String targetPath,
                     String prompt,
                     String promptHash,
+                    String baseSrc,
                     String imageSize) {
         this.id = UUID.randomUUID();
         this.ownerId = ownerId;
@@ -84,6 +88,7 @@ public class ImageJob {
         this.targetPath = targetPath;
         this.prompt = prompt;
         this.promptHash = promptHash;
+        this.baseSrc = baseSrc;
         this.imageSize = imageSize;
         this.status = ImageJobStatus.PENDING;
     }
@@ -162,6 +167,10 @@ public class ImageJob {
 
     public String getPromptHash() {
         return promptHash;
+    }
+
+    public String getBaseSrc() {
+        return baseSrc;
     }
 
     public String getImageSize() {
