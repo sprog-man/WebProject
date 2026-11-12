@@ -35,7 +35,8 @@
         "image": {
           "src": "/presets/visual-01.svg",
           "alt": "Aurora 品牌抽象视觉",
-          "fit": "cover"
+          "fit": "cover",
+          "prompt": "Editorial brand still life for an independent design studio: a warm translucent glass sphere resting on textured paper, soft directional daylight, quiet negative space, muted cream and terracotta palette, tactile material details, contemporary art direction, no text, no logo, no watermark."
         }
       },
       "layout": {
@@ -55,7 +56,8 @@
             "image": {
               "src": "/presets/visual-02.svg",
               "alt": "Halo 品牌项目",
-              "fit": "cover"
+              "fit": "cover",
+              "prompt": "Minimal architectural brand photography: a brushed metal archway in a sunlit gallery, long soft shadows, warm neutral walls, refined editorial composition, subtle grain, no people, no text, no logo."
             },
             "tag": "品牌视觉",
             "title": "Halo / 2025",
@@ -65,7 +67,8 @@
             "image": {
               "src": "/presets/visual-03.svg",
               "alt": "Field Notes 产品发布",
-              "fit": "cover"
+              "fit": "cover",
+              "prompt": "Close-up product photography for a stationery launch: layered recycled paper notebooks and a fountain pen on a dark green desk, raking window light, deep shadows, tactile fibers, restrained palette, no text, no logo."
             },
             "tag": "数字体验",
             "title": "Field Notes / 2025",
@@ -75,7 +78,8 @@
             "image": {
               "src": "/presets/visual-04.svg",
               "alt": "Mono Studio 网站",
-              "fit": "cover"
+              "fit": "cover",
+              "prompt": "Abstract website art direction for a monochrome studio: soft flowing translucent fabric forming a quiet geometric shape, pale gray background, precise studio lighting, editorial minimalism, fine grain, no text, no logo."
             },
             "tag": "网站设计",
             "title": "Mono Studio / 2026",

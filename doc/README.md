@@ -1,7 +1,7 @@
 # Aster / WebPorduce 项目文档
 
-> 文档版本：v1.1  
-> 记录时间：2026-11-11  
+> 文档版本：v1.2  
+> 记录时间：2026-11-12  
 > 代码位置：`C:\IdeaProject\WebProduce\WebPorduce`  
 > 文档目的：完整记录产品方案、技术方案、已完成内容、验证结果和后续计划。
 
@@ -34,14 +34,16 @@ Aster 是一个「用户与 AI 对话生成页面，再直接点选画布修改�
 - 项目：新建、列表、详情、重命名、删除、自动保存、版本冲突已联调。
 - AI：用户可配置 OpenAI 兼容 / Anthropic / Gemini，默认配置优先；服务端 DeepSeek 和 Mock 依次兜底。
 - AI 配置：加密落库、脱敏列表、默认切换、测试连接、编辑和删除已联调。
+- 图像 AI：独立配置、默认切换、真实测试图预览、确认后异步生成、失败保留原图已实现并通过集成测试。
 - 编辑：文字行内编辑、图片替换、主题/字号/布局调整、撤销重做、自动保存已走查。
 - 图片：PNG 上传、资产鉴权读取、图片面板替换已走查。
-- 导出：`index.html + assets/` ZIP 已实际下载、解压和静态服务器渲染验证。
+- 导出：`index.html + assets/` ZIP 已实际下载、解压和静态服务器渲染验证；AI 生成图同样走资产收集。
 - 构建：前端 `npm run build` 和后端 `mvn compile` 通过，应用启动和 Flyway V2 迁移成功。
 
 ### 尚未完成或未验证
 
-- 真实第三方模型：已验证 Agnes `agnes-2.5-flash` 的真实生成和局部编辑；DeepSeek / OpenAI / Anthropic / Gemini 仍未实测。
+- 真实第三方模型：已验证 Agnes `agnes-2.5-flash` 的文字生成和局部编辑；Agnes 图像模型、DeepSeek / OpenAI / Anthropic / Gemini 仍未实测。
+- 图像生成的浏览器手工交互（面板勾选、进度、预览）尚未在真实浏览器走查；后端链路已用本地桩图像服务集成测试覆盖。
 - PostgreSQL：本机 PostgreSQL 18 已安装、`webporduce` 库已创建，但应用当前仍使用 H2，尚未切换；Docker 未实际构建容器。
 - 真实窄屏回归：当前自动化浏览器窗口无法调整视口，≤900px 和 ≤390px 的完整手工走查仍建议补做。
 - 浏览器端 E2E 自动化：目前只有后端 API 冒烟测试，没有 Playwright/Cypress。
@@ -55,8 +57,10 @@ Aster 是一个「用户与 AI 对话生成页面，再直接点选画布修改�
 | 工程名 | WebPorduce（目录拼写为 `WebPorduce`） |
 | 本地端口 | 后端 `8080`，前端开发服务器 `5173` |
 | 默认 AI | 用户默认配置；未配置时服务端 DeepSeek；再回退 Mock |
-| AI 配置 | `#/settings/ai`，OpenAI 兼容 / Anthropic / Gemini |
+| AI 配置 | `#/settings/ai`（文本）/ `#/settings/image-ai`（图像），OpenAI 兼容 / Anthropic / Gemini / OpenAI Images |
 | API Key | AES-GCM 加密落库，列表只返回末四位 |
+| 图像端点 | 默认 `https://apihub.agnes-ai.com/v1/images/generations`，模型名可编辑 |
+| 图片任务 | `image_job` 异步执行，前端 2.5s 轮询，成功写回 PageSpec |
 | 开发数据库 | H2 文件库 `./data/webporduce` |
 | 生产数据库 | PostgreSQL（Docker 配置为 16，本机已安装 18.4） |
 | 页面协议 | `PageSpec` JSON，受控 9 类组件和多套布局变体 |

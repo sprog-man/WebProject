@@ -53,6 +53,9 @@ export function EditorPage() {
   const save = useEditorStore((state) => state.save)
   const undo = useEditorStore((state) => state.undo)
   const redo = useEditorStore((state) => state.redo)
+  const imageJobs = useEditorStore((state) => state.imageJobs)
+  const loadImageJobs = useEditorStore((state) => state.loadImageJobs)
+  const refreshImageJobs = useEditorStore((state) => state.refreshImageJobs)
   const [chatOpen, setChatOpen] = useState(false)
   const [inspectorOpen, setInspectorOpen] = useState(false)
   const [exporting, setExporting] = useState(false)
@@ -64,7 +67,10 @@ export function EditorPage() {
     api
       .getProject(projectId)
       .then((project) => {
-        if (!cancelled) loadProject(project)
+        if (!cancelled) {
+          loadProject(project)
+          void loadImageJobs()
+        }
       })
       .catch((caught) => {
         if (cancelled) return
@@ -81,7 +87,19 @@ export function EditorPage() {
     return () => {
       cancelled = true
     }
-  }, [projectId, loadProject, navigate, reset])
+  }, [projectId, loadImageJobs, loadProject, navigate, reset])
+
+  const hasActiveImageJobs = imageJobs.some(
+    (job) => job.status === 'PENDING' || job.status === 'RUNNING',
+  )
+
+  useEffect(() => {
+    if (!hasActiveImageJobs) return
+    const timer = window.setInterval(() => {
+      void refreshImageJobs()
+    }, 2500)
+    return () => window.clearInterval(timer)
+  }, [hasActiveImageJobs, refreshImageJobs])
 
   useEffect(() => {
     document.title = projectName ? `${projectName} · Aster` : 'Aster · 与 AI 一起做页面'

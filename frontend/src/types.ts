@@ -16,6 +16,7 @@ export interface ImageRef {
   alt?: string
   fit?: 'cover' | 'contain'
   assetId?: string
+  prompt?: string
 }
 
 export interface SectionSpec {
@@ -143,6 +144,81 @@ export interface AiConfigTestResult {
   model: string
 }
 
+export type ImageProviderType = 'OPENAI_IMAGES'
+
+export interface ImageProviderPreset {
+  type: ImageProviderType
+  label: string
+  defaultBaseUrl: string
+  defaultModel: string
+  description: string
+}
+
+export interface ImageAiConfig {
+  id: string
+  name: string
+  providerType: ImageProviderType
+  baseUrl: string
+  model: string
+  keyHint: string | null
+  hasApiKey: boolean
+  defaultSize: string
+  defaultQuality: string | null
+  defaultConfig: boolean
+  createdAt: string
+  updatedAt: string
+}
+
+export interface SaveImageAiConfigInput {
+  name: string
+  providerType: ImageProviderType
+  baseUrl: string
+  model: string
+  apiKey?: string
+  defaultSize: string
+  defaultQuality?: string
+  defaultConfig: boolean
+}
+
+export interface ImageAiConfigTestResult {
+  ok: boolean
+  message: string
+  latencyMs: number
+  model: string
+  size: string
+  previewUrl: string | null
+  mimeType: string | null
+  width: number | null
+  height: number | null
+}
+
+export type ImageJobStatus = 'PENDING' | 'RUNNING' | 'SUCCEEDED' | 'FAILED' | 'SUPERSEDED'
+
+export interface ImageJob {
+  id: string
+  sectionId: string
+  path: string
+  prompt: string
+  size: string
+  status: ImageJobStatus
+  assetId: string | null
+  assetUrl: string | null
+  errorMessage: string | null
+  createdAt: string
+  updatedAt: string
+  finishedAt: string | null
+}
+
+export interface ImageJobListResponse {
+  jobs: ImageJob[]
+  specVersion: number
+}
+
+export interface CreateImageJobInput {
+  sectionId: string
+  path: string
+  prompt: string
+}
 
 export type SelectionKind = 'text' | 'image'
 

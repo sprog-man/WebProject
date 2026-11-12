@@ -13,6 +13,7 @@ import {
 import { PageRenderer } from '../renderer/PageRenderer'
 import { useEditorStore } from '../store/editor'
 import type { DeviceMode } from '../types'
+import { ImageGenerationPanel } from './ImageGenerationPanel'
 
 const DEVICES: Array<{ id: DeviceMode; label: string; icon: React.ReactNode }> = [
   { id: 'desktop', label: '桌面', icon: <IconMonitor /> },
@@ -60,6 +61,7 @@ export function CanvasPanel({ onOpenChat }: { onOpenChat?: () => void }) {
   const editMode = useEditorStore((state) => state.editMode)
   const device = useEditorStore((state) => state.device)
   const sending = useEditorStore((state) => state.sending)
+  const imageJobs = useEditorStore((state) => state.imageJobs)
   const projectName = useEditorStore((state) => state.projectName)
   const historyLength = useEditorStore((state) => state.history.length)
   const futureLength = useEditorStore((state) => state.future.length)
@@ -196,6 +198,7 @@ export function CanvasPanel({ onOpenChat }: { onOpenChat?: () => void }) {
                 selection={selection}
                 onSelect={select}
                 onCommitText={updateText}
+                imageJobs={imageJobs}
               />
             ) : (
               <div className="canvas-empty">
@@ -223,6 +226,8 @@ export function CanvasPanel({ onOpenChat }: { onOpenChat?: () => void }) {
           </div>
         )}
       </div>
+
+      <ImageGenerationPanel />
 
       <div className="canvas-statusbar">
         <div className="canvas-status-left">

@@ -10,6 +10,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
@@ -101,6 +102,68 @@ public class AssetService {
         );
         assetRepository.save(asset);
         return toResponse(asset);
+    }
+
+    /**
+     * 保存 AI 生成的图片。返回完整 Asset，调用方可以直接把它写进 PageSpec。
+     */
+    public Asset storeGenerated(UUID ownerId, UUID projectId, byte[] bytes, String mimeType,
+                                String originalName, String prompt) {
+        if (bytes == null || bytes.length == 0) {
+            throw new ApiException(HttpStatus.BAD_REQUEST, "生成的图片为空");
+        }
+        if (bytes.length > MAX_SIZE) {
+            throw new ApiException(HttpStatus.PAYLOAD_TOO_LARGE, "生成图片不能超过 8MB");
+        }
+        String normalizedType = mimeType == null ? "" : mimeType.toLowerCase(Locale.ROOT);
+        if (!ALLOWED_TYPES.contains(normalizedType)) {
+            throw new ApiException(HttpStatus.BAD_REQUEST, "只支持 PNG、JPG、WebP、GIF 图片");
+        }
+        if (projectId != null) {
+            projectRepository.findByIdAndOwnerId(projectId, ownerId)
+                    .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "页面不存在"));
+        }
+
+        String extension = extensionFor(normalizedType);
+        String storageKey = ownerId + "/" + UUID.randomUUID() + extension;
+        Path target = storageRoot.resolve(storageKey).normalize();
+        if (!target.startsWith(storageRoot)) {
+            throw new ApiException(HttpStatus.BAD_REQUEST, "文件路径不正确");
+        }
+
+        Integer width = null;
+        Integer height = null;
+        try (InputStream stream = new ByteArrayInputStream(bytes)) {
+            BufferedImage image = ImageIO.read(stream);
+            if (image != null) {
+                width = image.getWidth();
+                height = image.getHeight();
+            }
+        } catch (Exception ignored) {
+            // WebP may not have an ImageIO reader in the JDK. Dimensions are optional.
+        }
+
+        try {
+            Files.createDirectories(target.getParent());
+            Files.write(target, bytes);
+        } catch (IOException exception) {
+            throw new ApiException(HttpStatus.INTERNAL_SERVER_ERROR, "生成图片保存失败");
+        }
+
+        Asset asset = new Asset(
+                ownerId,
+                projectId,
+                safeName(originalName == null ? "ai-image" + extension : originalName),
+                storageKey,
+                normalizedType,
+                bytes.length,
+                width,
+                height,
+                "AI_GENERATED",
+                prompt
+        );
+        assetRepository.save(asset);
+        return asset;
     }
 
     public Asset requireOwned(UUID ownerId, UUID assetId) {

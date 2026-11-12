@@ -74,10 +74,60 @@ public class PageSpecValidator {
             if (section.has("layout") && !section.path("layout").isObject()) {
                 invalid("区块布局格式不正确");
             }
+            validateSectionImages(section, component);
         }
 
         if (root.has("fieldMeta") && !root.path("fieldMeta").isObject()) {
             invalid("字段元数据格式不正确");
+        }
+    }
+
+    private void validateSectionImages(JsonNode section, String component) {
+        if ("hero.split".equals(component)) {
+            validateImage(section.path("props").path("image"), false);
+        } else if ("gallery.grid".equals(component)) {
+            JsonNode items = section.path("props").path("items");
+            if (items.isArray()) {
+                for (JsonNode item : items) {
+                    validateImage(item.path("image"), false);
+                }
+            }
+        }
+    }
+
+    private void validateImage(JsonNode image, boolean required) {
+        if (image == null || image.isMissingNode() || image.isNull()) {
+            if (required) {
+                invalid("图片数据不能为空");
+            }
+            return;
+        }
+        if (!image.isObject()) {
+            invalid("图片数据格式不正确");
+        }
+        if (image.has("src") && !image.path("src").isTextual()) {
+            invalid("图片地址格式不正确");
+        }
+        if (image.has("alt") && !image.path("alt").isTextual()) {
+            invalid("图片说明格式不正确");
+        }
+        if (image.has("fit")) {
+            String fit = image.path("fit").asText("");
+            if (!Set.of("cover", "contain").contains(fit)) {
+                invalid("图片展示方式不正确");
+            }
+        }
+        if (image.has("assetId") && !image.path("assetId").isTextual()) {
+            invalid("图片资产格式不正确");
+        }
+        if (image.has("prompt")) {
+            JsonNode prompt = image.path("prompt");
+            if (!prompt.isTextual()) {
+                invalid("图像提示词格式不正确");
+            }
+            if (prompt.asText("").length() > 1500) {
+                invalid("图像提示词不能超过 1500 个字符");
+            }
         }
     }
 

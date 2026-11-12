@@ -38,6 +38,12 @@ public class Asset {
 
     private Integer height;
 
+    @Column(length = 24)
+    private String source;
+
+    @Column(columnDefinition = "TEXT")
+    private String prompt;
+
     @Column(name = "created_at", nullable = false)
     private Instant createdAt;
 
@@ -46,6 +52,13 @@ public class Asset {
 
     public Asset(UUID ownerId, UUID projectId, String originalName, String storageKey,
                  String mimeType, long byteSize, Integer width, Integer height) {
+        this(ownerId, projectId, originalName, storageKey, mimeType, byteSize, width, height,
+                "UPLOAD", null);
+    }
+
+    public Asset(UUID ownerId, UUID projectId, String originalName, String storageKey,
+                 String mimeType, long byteSize, Integer width, Integer height,
+                 String source, String prompt) {
         this.id = UUID.randomUUID();
         this.ownerId = ownerId;
         this.projectId = projectId;
@@ -55,6 +68,8 @@ public class Asset {
         this.byteSize = byteSize;
         this.width = width;
         this.height = height;
+        this.source = source;
+        this.prompt = prompt;
     }
 
     @PrePersist
@@ -96,6 +111,14 @@ public class Asset {
 
     public Integer getHeight() {
         return height;
+    }
+
+    public String getSource() {
+        return source;
+    }
+
+    public String getPrompt() {
+        return prompt;
     }
 
     public Instant getCreatedAt() {

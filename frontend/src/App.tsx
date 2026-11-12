@@ -6,6 +6,7 @@ import { DashboardPage } from './pages/DashboardPage'
 import { EditorPage } from './pages/EditorPage'
 import { LoginPage } from './pages/LoginPage'
 import { AiSettingsPage } from './pages/AiSettingsPage'
+import { ImageAiSettingsPage } from './pages/ImageAiSettingsPage'
 
 function FullScreenLoader() {
   return (
@@ -59,6 +60,14 @@ function App() {
               element={
                 <RequireAuth>
                   <AiSettingsPage />
+                </RequireAuth>
+              }
+            />
+            <Route
+              path="/settings/image-ai"
+              element={
+                <RequireAuth>
+                  <ImageAiSettingsPage />
                 </RequireAuth>
               }
             />

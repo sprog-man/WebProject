@@ -1,4 +1,6 @@
 import {
+  createContext,
+  useContext,
   useEffect,
   useRef,
   type ClipboardEvent,
@@ -8,7 +10,7 @@ import {
   type MouseEvent,
   type ReactNode,
 } from 'react'
-import type { ImageRef, PageSpec, SectionSpec, Selection } from '../types'
+import type { ImageJob, ImageRef, PageSpec, SectionSpec, Selection } from '../types'
 
 interface PageRendererProps {
   spec: PageSpec
@@ -16,7 +18,10 @@ interface PageRendererProps {
   selection?: Selection | null
   onSelect?: (selection: Selection) => void
   onCommitText?: (sectionId: string, path: string, value: string) => void
+  imageJobs?: ImageJob[]
 }
+
+const ImageJobsContext = createContext<ImageJob[]>([])
 
 interface SectionProps {
   section: SectionSpec
@@ -146,6 +151,13 @@ function EditableImage({
   selected,
   onSelect,
 }: EditableImageProps) {
+  const jobs = useContext(ImageJobsContext)
+  const activeJob = jobs.find(
+    (job) =>
+      job.sectionId === sectionId &&
+      job.path === path &&
+      (job.status === 'PENDING' || job.status === 'RUNNING'),
+  )
   const select = () => {
     if (!editMode) return
     onSelect?.({ sectionId, path, kind: 'image', label })
@@ -153,7 +165,7 @@ function EditableImage({
 
   return (
     <div
-      className={`page-img-wrap ${selected && editMode ? 'is-selected' : ''}`}
+      className={`page-img-wrap ${selected && editMode ? 'is-selected' : ''} ${activeJob ? 'is-generating' : ''}`}
       onClick={(event) => {
         if (!editMode) return
         event.stopPropagation()
@@ -176,7 +188,13 @@ function EditableImage({
         draggable={false}
         style={{ objectFit: image.fit || 'cover' }}
       />
-      {editMode && (
+      {activeJob && (
+        <div className="page-image-generating" aria-live="polite">
+          <span className="page-image-generating-dot" />
+          <span>AI 正在生成图片</span>
+        </div>
+      )}
+      {editMode && !activeJob && (
         <button type="button" className="page-image-edit" onClick={select}>
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
             <rect x="3" y="5" width="18" height="14" rx="2" />
@@ -889,6 +907,7 @@ export function PageRenderer({
   selection = null,
   onSelect,
   onCommitText,
+  imageJobs = [],
 }: PageRendererProps) {
   const theme = spec.theme
   const style = {
@@ -900,24 +919,26 @@ export function PageRenderer({
   } as CSSProperties
 
   return (
-    <div
-      className={`page-root ${editMode ? 'page-edit-mode' : ''}`}
-      data-mode={theme.mode}
-      data-font={theme.font}
-      style={style}
-    >
-      <div className="page">
-        {spec.sections.map((section) => (
-          <SectionRenderer
-            key={section.id}
-            section={section}
-            editMode={editMode}
-            selection={selection}
-            onSelect={onSelect}
-            onCommitText={onCommitText}
-          />
-        ))}
+    <ImageJobsContext.Provider value={imageJobs}>
+      <div
+        className={`page-root ${editMode ? 'page-edit-mode' : ''}`}
+        data-mode={theme.mode}
+        data-font={theme.font}
+        style={style}
+      >
+        <div className="page">
+          {spec.sections.map((section) => (
+            <SectionRenderer
+              key={section.id}
+              section={section}
+              editMode={editMode}
+              selection={selection}
+              onSelect={onSelect}
+              onCommitText={onCommitText}
+            />
+          ))}
+        </div>
       </div>
-    </div>
+    </ImageJobsContext.Provider>
   )
 }

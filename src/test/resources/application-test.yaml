@@ -13,3 +13,5 @@ spring:
 app:
   demo:
     seed-on-register: false
+  storage:
+    root: ./target/test-uploads

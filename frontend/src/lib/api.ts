@@ -4,11 +4,17 @@ import type {
   AiProviderPreset,
   AssetResponse,
   ChatMessage,
+  CreateImageJobInput,
+  ImageAiConfig,
+  ImageAiConfigTestResult,
+  ImageJobListResponse,
+  ImageProviderPreset,
   PageSpec,
   ProjectDetail,
   ProjectSummary,
   SaveAiConfigInput,
   SaveDraftResponse,
+  SaveImageAiConfigInput,
   SendMessageResponse,
   User,
 } from '../types'
@@ -256,6 +262,56 @@ export const api = {
 
   async testAiConfig(configId: string): Promise<AiConfigTestResult> {
     return request<AiConfigTestResult>(`/api/ai/configs/${configId}/test`, { method: 'POST' })
+  },
+
+  async imageAiProviders(): Promise<ImageProviderPreset[]> {
+    return request<ImageProviderPreset[]>('/api/image-ai/providers')
+  },
+
+  async imageAiConfigs(): Promise<ImageAiConfig[]> {
+    return request<ImageAiConfig[]>('/api/image-ai/configs')
+  },
+
+  async createImageAiConfig(input: SaveImageAiConfigInput): Promise<ImageAiConfig> {
+    return request<ImageAiConfig>('/api/image-ai/configs', {
+      method: 'POST',
+      body: input,
+    })
+  },
+
+  async updateImageAiConfig(configId: string, input: SaveImageAiConfigInput): Promise<ImageAiConfig> {
+    return request<ImageAiConfig>(`/api/image-ai/configs/${configId}`, {
+      method: 'PUT',
+      body: input,
+    })
+  },
+
+  async deleteImageAiConfig(configId: string): Promise<void> {
+    return request<void>(`/api/image-ai/configs/${configId}`, { method: 'DELETE' })
+  },
+
+  async setDefaultImageAiConfig(configId: string): Promise<ImageAiConfig> {
+    return request<ImageAiConfig>(`/api/image-ai/configs/${configId}/default`, { method: 'POST' })
+  },
+
+  async testImageAiConfig(configId: string): Promise<ImageAiConfigTestResult> {
+    return request<ImageAiConfigTestResult>(`/api/image-ai/configs/${configId}/test`, {
+      method: 'POST',
+    })
+  },
+
+  async listImageJobs(projectId: string): Promise<ImageJobListResponse> {
+    return request<ImageJobListResponse>(`/api/projects/${projectId}/image-jobs`)
+  },
+
+  async createImageJobs(
+    projectId: string,
+    items: CreateImageJobInput[],
+  ): Promise<ImageJobListResponse> {
+    return request<ImageJobListResponse>(`/api/projects/${projectId}/image-jobs`, {
+      method: 'POST',
+      body: { items },
+    })
   },
 }
 

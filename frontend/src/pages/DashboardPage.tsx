@@ -175,6 +175,9 @@ export function DashboardPage() {
           <button type="button" onClick={() => navigate('/settings/ai')}>
             AI 设置
           </button>
+          <button type="button" onClick={() => navigate('/settings/image-ai')}>
+            图像 AI
+          </button>
           <span>模板</span>
           <span>使用指南</span>
         </nav>

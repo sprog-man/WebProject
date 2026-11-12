@@ -45,7 +45,117 @@ public class AiService {
 
     public AiResult generate(UUID ownerId, String projectName, JsonNode currentSpec, String message) {
         AiResult result = runWithFallback(ownerId, provider -> provider.generate(projectName, currentSpec, message));
-        return applyDesignVariety(result, projectName, message);
+        AiResult varied = applyDesignVariety(result, projectName, message);
+        return ensureImagePrompts(varied, projectName, message);
+    }
+
+    /**
+     * 兜底：即使模型漏写 prompt，也要保证每张图都有可执行的图像提示词。
+     * 提示词按行业选择摄影场景，并按图片序号变化视角，避免整页图片同一构图。
+     */
+    private AiResult ensureImagePrompts(AiResult result, String projectName, String message) {
+        JsonNode specNode = result.spec();
+        if (specNode == null || !specNode.isObject()) {
+            return result;
+        }
+        ObjectNode spec = (ObjectNode) specNode.deepCopy();
+        JsonNode sections = spec.path("sections");
+        if (!sections.isArray() || sections.isEmpty()) {
+            return result;
+        }
+
+        String title = spec.path("meta").path("title").asText("");
+        String description = spec.path("meta").path("description").asText("");
+        String subject = firstNonBlank(title, projectName, "the brand");
+        String scene = sceneFor(message + " " + title + " " + description);
+        int imageIndex = 0;
+        boolean changed = false;
+
+        for (JsonNode sectionNode : sections) {
+            if (!(sectionNode instanceof ObjectNode section)) {
+                continue;
+            }
+            String component = section.path("component").asText("");
+            if ("hero.split".equals(component)) {
+                changed |= fillPrompt(section.path("props").path("image"), scene, subject, imageIndex++);
+            } else if ("gallery.grid".equals(component)) {
+                for (JsonNode item : section.path("props").path("items")) {
+                    if (item.isObject()) {
+                        changed |= fillPrompt(item.path("image"), scene, subject, imageIndex++);
+                    }
+                }
+            }
+        }
+
+        return changed
+                ? new AiResult(result.reply(), spec, true, result.provider())
+                : result;
+    }
+
+    private boolean fillPrompt(JsonNode image, String scene, String subject, int index) {
+        if (!(image instanceof ObjectNode imageNode)) {
+            return false;
+        }
+        if (!imageNode.path("prompt").asText("").isBlank()) {
+            return false;
+        }
+        imageNode.put("prompt", buildImagePrompt(scene, subject, index));
+        return true;
+    }
+
+    private String buildImagePrompt(String scene, String subject, int index) {
+        String[] angles = {
+                "wide establishing composition with generous negative space",
+                "medium shot focused on a single hero detail and material texture",
+                "close-up detail study with shallow depth of field and soft bokeh",
+                "low-angle perspective with layered foreground and background",
+                "quiet symmetrical composition with calm visual rhythm"
+        };
+        String angle = angles[Math.floorMod(index, angles.length)];
+        return "Editorial " + scene + " for " + subject + ", " + angle
+                + ", natural directional daylight, tactile materials, refined muted color palette,"
+                + " contemporary art direction, high detail, no text, no logo, no watermark.";
+    }
+
+    private String sceneFor(String text) {
+        String value = text == null ? "" : text.toLowerCase();
+        if (value.contains("咖啡")) {
+            return "coffee brand photography";
+        }
+        if (value.contains("茶") || value.contains("奶茶")) {
+            return "tea beverage brand photography";
+        }
+        if (value.contains("摄影") || value.contains("作品")) {
+            return "fine art photography";
+        }
+        if (value.contains("餐厅") || value.contains("餐饮") || value.contains("甜品") || value.contains("烘焙")) {
+            return "restaurant food photography";
+        }
+        if (value.contains("时尚") || value.contains("服装")) {
+            return "fashion editorial photography";
+        }
+        if (value.contains("建筑") || value.contains("空间") || value.contains("室内")) {
+            return "architectural interior photography";
+        }
+        if (value.contains("ai") || value.contains("科技") || value.contains("saas") || value.contains("软件")) {
+            return "abstract technology brand visual";
+        }
+        if (value.contains("健身") || value.contains("运动")) {
+            return "athletic lifestyle photography";
+        }
+        if (value.contains("花") || value.contains("植物")) {
+            return "botanical still life photography";
+        }
+        return "minimal brand still life";
+    }
+
+    private String firstNonBlank(String... values) {
+        for (String value : values) {
+            if (value != null && !value.isBlank()) {
+                return value.trim();
+            }
+        }
+        return "the brand";
     }
 
     /**

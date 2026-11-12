@@ -1,10 +1,12 @@
 import { create } from 'zustand'
 import { immer } from 'zustand/middleware/immer'
 import { api, ApiError } from '../lib/api'
-import { cloneSpec, findSection, getAtPath, setAtPath } from '../lib/utils'
+import { cloneSpec, collectImages, findSection, getAtPath, setAtPath } from '../lib/utils'
 import type {
   ChatMessage,
+  CreateImageJobInput,
   DeviceMode,
+  ImageJob,
   ImageRef,
   InspectorTab,
   PageSpec,
@@ -32,6 +34,9 @@ interface EditorState {
   savedCounter: number
   interactionSnapshot: PageSpec | null
   lastSavedAt: string | null
+  imageJobs: ImageJob[]
+  imageJobsLoading: boolean
+  imagePanelOpen: boolean
 
   loadProject: (project: ProjectDetail) => void
   reset: () => void
@@ -51,6 +56,10 @@ interface EditorState {
   redo: () => void
   save: () => Promise<boolean>
   sendMessage: (content: string) => Promise<void>
+  setImagePanelOpen: (open: boolean) => void
+  loadImageJobs: () => Promise<void>
+  refreshImageJobs: () => Promise<void>
+  startImageGeneration: (items: CreateImageJobInput[]) => Promise<boolean>
 }
 
 let autosaveTimer: number | undefined
@@ -77,6 +86,32 @@ function markUser(state: EditorState, sectionId: string, path: string) {
 function touch(state: EditorState) {
   state.changeCounter += 1
   state.saveStatus = 'dirty'
+}
+
+function hasPendingImagePrompt(spec: PageSpec): boolean {
+  return collectImages(spec).some(
+    (entry) =>
+      Boolean(entry.image.prompt?.trim()) &&
+      !entry.image.assetId &&
+      entry.image.src.startsWith('/presets/'),
+  )
+}
+
+function applyCompletedJobs(spec: PageSpec, jobs: ImageJob[]): boolean {
+  let changed = false
+  for (const job of jobs) {
+    if (job.status !== 'SUCCEEDED' || !job.assetUrl || !job.assetId) continue
+    const section = findSection(spec, job.sectionId)
+    if (!section) continue
+    const image = getAtPath(section, job.path) as ImageRef | undefined
+    if (!image || typeof image !== 'object') continue
+    if ((image.prompt || '').trim() !== job.prompt.trim()) continue
+    if (image.src === job.assetUrl && image.assetId === job.assetId) continue
+    image.src = job.assetUrl
+    image.assetId = job.assetId
+    changed = true
+  }
+  return changed
 }
 
 function queueAutosave() {
@@ -109,6 +144,9 @@ export const useEditorStore = create<EditorState>()(
     savedCounter: 0,
     interactionSnapshot: null,
     lastSavedAt: null,
+    imageJobs: [],
+    imageJobsLoading: false,
+    imagePanelOpen: false,
 
     loadProject: (project) => {
       if (autosaveTimer) window.clearTimeout(autosaveTimer)
@@ -130,6 +168,9 @@ export const useEditorStore = create<EditorState>()(
         state.savedCounter = 0
         state.interactionSnapshot = null
         state.lastSavedAt = project.updatedAt
+        state.imageJobs = []
+        state.imageJobsLoading = false
+        state.imagePanelOpen = false
       })
     },
 
@@ -155,6 +196,9 @@ export const useEditorStore = create<EditorState>()(
         state.savedCounter = 0
         state.interactionSnapshot = null
         state.lastSavedAt = null
+        state.imageJobs = []
+        state.imageJobsLoading = false
+        state.imagePanelOpen = false
       })
     },
 
@@ -378,6 +422,7 @@ export const useEditorStore = create<EditorState>()(
 
       try {
         const response = await api.sendMessage(projectId, trimmed)
+        const pendingImages = hasPendingImagePrompt(response.spec)
         set((draft) => {
           draft.messages = draft.messages.filter((message) => message.id !== tempId)
           draft.messages.push(response.userMessage, response.assistantMessage)
@@ -395,13 +440,93 @@ export const useEditorStore = create<EditorState>()(
           draft.selection = null
           draft.tab = 'content'
           draft.lastSavedAt = new Date().toISOString()
+          if (pendingImages) draft.imagePanelOpen = true
         })
+        if (pendingImages) void get().refreshImageJobs()
       } catch (error) {
         set((draft) => {
           draft.messages = draft.messages.filter((message) => message.id !== tempId)
           draft.sending = false
         })
         toast('error', error instanceof ApiError ? error.message : 'Aster 暂时没有回应，请稍后再试')
+      }
+    },
+
+    setImagePanelOpen: (open) => {
+      set((state) => {
+        state.imagePanelOpen = open
+      })
+    },
+
+    loadImageJobs: async () => {
+      const projectId = get().projectId
+      if (!projectId) return
+      set((state) => {
+        state.imageJobsLoading = true
+      })
+      // 首次加载也走同一套同步逻辑，避免只更新版本号却不应用已完成的任务。
+      await get().refreshImageJobs()
+    },
+
+    refreshImageJobs: async () => {
+      const projectId = get().projectId
+      if (!projectId) return
+      try {
+        const response = await api.listImageJobs(projectId)
+        let changed = false
+        set((state) => {
+          state.imageJobs = response.jobs
+          state.imageJobsLoading = false
+          if (state.spec) {
+            const next = cloneSpec(state.spec)
+            if (applyCompletedJobs(next, response.jobs)) {
+              state.history.push(cloneSpec(state.spec))
+              if (state.history.length > 60) state.history.shift()
+              state.future = []
+              state.spec = next
+              state.changeCounter += 1
+              state.saveStatus = 'dirty'
+              changed = true
+            }
+          }
+          state.version = response.specVersion
+        })
+        if (changed) queueAutosave()
+      } catch {
+        set((state) => {
+          state.imageJobsLoading = false
+        })
+      }
+    },
+
+    startImageGeneration: async (items) => {
+      const state = get()
+      const projectId = state.projectId
+      if (!projectId || state.sending) return false
+      if (items.length === 0) {
+        toast('info', '先勾选要生成的图片')
+        return false
+      }
+      for (let i = 0; i < 3; i += 1) {
+        const before = get()
+        if (before.changeCounter === before.savedCounter && before.saveStatus === 'saved') break
+        const ok = await before.save()
+        if (!ok) return false
+      }
+      try {
+        const response = await api.createImageJobs(projectId, items)
+        set((draft) => {
+          draft.imagePanelOpen = true
+          const known = new Set(response.jobs.map((job) => job.id))
+          draft.imageJobs = [...response.jobs, ...draft.imageJobs.filter((job) => !known.has(job.id))]
+          draft.version = response.specVersion
+        })
+        toast('success', `已提交 ${response.jobs.length} 张图片生成任务`)
+        void get().refreshImageJobs()
+        return true
+      } catch (error) {
+        toast('error', error instanceof ApiError ? error.message : '图片生成任务提交失败')
+        return false
       }
     },
   })),

@@ -165,6 +165,7 @@ public class MockAiProvider implements AiProvider {
         if (text.contains("咖啡")) {
             meta.put("description", "一间独立咖啡品牌，安静、有手作感。");
             setHero(spec, "MORNING", "把一杯咖啡，\n做成一段日常。", "从豆子到杯子，我们相信好的日常不需要大声解释。", "#c58a5a");
+            setHeroPrompt(spec, "Editorial coffee brand still life: a handmade ceramic cup on a worn wooden counter, warm morning window light, soft steam, scattered coffee beans, tactile paper texture, quiet muted brown palette, no text, no logo.");
             setTheme(spec, "paper");
             setMenu(spec, "COFFEE MENU", "今日咖啡单", "豆子每天换，风味跟着季节走。", new String[][]{
                     {"手冲单品", "当日单一产区，干净、有层次。", "¥32", "今日"},
@@ -174,6 +175,7 @@ public class MockAiProvider implements AiProvider {
         } else if (foodOrDrink) {
             meta.put("description", "一间有果香和山野气的茶饮品牌。");
             setHero(spec, "SHANLAN", "山野的清气，\n装进这一杯。", "当季水果、原叶茶和一点克制，做一杯喝完会想念的茶。", "#5aad8a");
+            setHeroPrompt(spec, "Editorial tea brand photography: a tall glass of iced jasmine tea with fresh green grapes on a pale stone table, bright natural daylight, condensation droplets, soft green leaves, clean pastel palette, airy composition, no text, no logo.");
             setTheme(spec, "candy");
             setMenu(spec, "SIGNATURE MENU", "本季茶单", "门店每日限量，卖完就等明天。", new String[][]{
                     {"山岚茉莉", "茉莉绿茶、青提、少量海盐。", "¥22", "招牌"},
@@ -183,12 +185,19 @@ public class MockAiProvider implements AiProvider {
         } else if (text.contains("摄影") || text.contains("作品集")) {
             meta.put("description", "以图像与留白为主角的摄影工作室。");
             setHero(spec, "FRAME", "光落下的地方，\n就是作品开始的地方。", "商业摄影、编辑影像与长期视觉项目。", "#e9c46a");
+            setHeroPrompt(spec, "Cinematic editorial photograph of a quiet concrete studio interior, a single beam of late afternoon sunlight cutting across the wall, deep shadows, warm dust in the air, minimal composition, fine film grain, no people, no text, no logo.");
+            setGalleryPrompts(spec, new String[]{
+                    "Editorial portrait photograph of a ceramic artist in a sunlit studio, hands shaping clay, soft window light, muted earth tones, shallow depth of field, no text, no logo.",
+                    "Architectural detail photograph of a brutalist concrete stairwell, strong geometric shadows, warm late-day light, quiet monumental mood, no people, no text, no logo.",
+                    "Still life photograph of wildflowers in a handmade glass vase on a linen table, soft overcast daylight, delicate muted colors, tactile grain, no text, no logo."
+            });
             setTheme(spec, "paper");
             setHeroVariant(spec, "full");
             setGalleryVariant(spec, "masonry");
         } else if (text.contains("ai") || text.contains("人工智能") || text.contains("科技")) {
             meta.put("description", "一个有未来感但不冰冷的 AI 产品。");
             setHero(spec, "NOVA", "让复杂的技术，\n变得可以触摸。", "为思考留出空间，让工具安静地退到内容之后。", "#75d4e8");
+            setHeroPrompt(spec, "Abstract technology brand image: translucent glass planes floating in a deep blue-black space, thin cyan light lines, soft volumetric haze, precise studio reflections, calm futuristic mood, no text, no logo, no interface.");
             setTheme(spec, "ocean");
             setFeatures(spec, "BUILT FOR TEAMS", "把重复工作，\n交给系统。", "让团队把时间花在真正需要判断的地方。", new String[][]{
                     {"01", "可观测", "每一步都有输入、输出和耗时。"},
@@ -215,6 +224,34 @@ public class MockAiProvider implements AiProvider {
             if ("footer.basic".equals(component)) {
                 ((ObjectNode) section.path("props")).put("brand", brand);
             }
+        }
+    }
+
+    private void setHeroPrompt(JsonNode spec, String prompt) {
+        for (JsonNode section : spec.path("sections")) {
+            if ("hero.split".equals(section.path("component").asText())) {
+                JsonNode image = section.path("props").path("image");
+                if (image instanceof ObjectNode object) {
+                    object.put("prompt", prompt);
+                }
+                return;
+            }
+        }
+    }
+
+    private void setGalleryPrompts(JsonNode spec, String[] prompts) {
+        for (JsonNode section : spec.path("sections")) {
+            if (!"gallery.grid".equals(section.path("component").asText())) {
+                continue;
+            }
+            JsonNode items = section.path("props").path("items");
+            for (int index = 0; index < items.size(); index++) {
+                JsonNode image = items.get(index).path("image");
+                if (image instanceof ObjectNode object) {
+                    object.put("prompt", prompts[Math.min(index, prompts.length - 1)]);
+                }
+            }
+            return;
         }
     }
 

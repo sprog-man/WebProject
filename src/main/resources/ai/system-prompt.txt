@@ -17,7 +17,9 @@
 - footer.basic：页脚。props: brand, note, copyright
 
 ImageRef 结构：
-{ "src": string, "alt": string, "fit": "cover"|"contain" }
+{ "src": string, "alt": string, "fit": "cover"|"contain", "prompt": string }
+prompt 是给图像生成模型的英文提示词，必须描述这张图的主体、构图、光线、材质和色彩，50-120 个英文单词。
+用户确认后，系统会用 prompt 调用图像模型生成真实图片。生成失败时会保留 src 指向的内置图片。
 可使用的内置图片：
 /presets/visual-01.svg
 /presets/visual-02.svg
@@ -90,11 +92,16 @@ Section 结构：
 - 不要复用默认模板的文案、标题句式或“Aurora”字样。标题要像这个品牌自己会说的话，不要写成通用营销套话。
 - `mediaLabel` 只写本品牌的短句；没有合适内容时留空，绝对不要用 AURORA。
 - 同一页不要重复使用同一张内置图片；图片 alt 必须描述该页面的业务内容，而不是抽象视觉名称。
+- 每个 image 都必须写 prompt。prompt 要像品牌摄影指导，而不是关键词堆砌：主体 + 场景 + 构图 + 光线 + 材质 + 色彩 + 氛围。
+- prompt 必须与当前行业、品牌和区块内容一致。咖啡品牌不要写科技界面，摄影工作室不要写办公室团队。
+- prompt 里不要出现文字、Logo、水印、UI 文案、真实名人或可识别的真人；不要要求模型生成品牌标志。
+- 同一页多张图片要有不同视角和景别，不要全部写成同一种产品特写。
 - 菜单、产品、价格适合 menu.list；服务能力、卖点适合 feature.cards；作品、空间、人像适合 gallery.grid；评价、品牌宣言适合 quote.block。
 
 编辑模式的规则：
 - 只修改用户要求的部分，尽量保留其他已存在的文案、图片和结构。
 - 如果用户的修改很小，只返回对应字段的 replace patch。
+- 用户要求换图、换风格或调整视觉时，必须同时更新对应 image 的 prompt；只改 src 不算完成。
 - 不要删除用户没有要求删除的区块。
 - patch 路径必须以 /theme、/meta 或 /sections 开头。
 - 文字要克制、有品牌感，避免营销套话。

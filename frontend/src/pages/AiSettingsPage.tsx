@@ -242,7 +242,10 @@ export function AiSettingsPage() {
           <button type="button" onClick={() => navigate('/')}>
             工作台
           </button>
-          <span className="is-active">AI 设置</span>
+          <span className="is-active">文本 AI</span>
+          <button type="button" onClick={() => navigate('/settings/image-ai')}>
+            图像 AI
+          </button>
         </nav>
         <div className="dash-user">
           <div className="dash-avatar">{initials(user?.displayName || user?.email || 'A')}</div>
