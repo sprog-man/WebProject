@@ -1,0 +1,15 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="WebPorduce PostgreSQL" type="SpringBootApplicationConfigurationType" factoryName="Spring Boot">
+    <module name="WebPorduce" />
+    <option name="SPRING_BOOT_MAIN_CLASS" value="com.xiaoliu.webporduce.WebPorduceApplication" />
+    <option name="ACTIVE_PROFILES" value="local-postgres" />
+    <envs>
+      <env name="DB_URL" value="jdbc:postgresql://localhost:5432/webporduce" />
+      <env name="DB_USERNAME" value="webporduce" />
+      <env name="DB_PASSWORD" value="" />
+    </envs>
+    <method v="2">
+      <option name="Make" enabled="true" />
+    </method>
+  </configuration>
+</component>

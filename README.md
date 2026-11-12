@@ -106,6 +106,21 @@ mvn package
 java -jar target/WebPorduce-0.0.1-SNAPSHOT.jar
 ```
 
+### 本地使用 PostgreSQL
+
+项目已提供 `local-postgres` profile，本地切 PostgreSQL 只需要数据库密码，不需要填 `APP_AI_ENCRYPTION_KEY`：
+
+- IntelliJ 运行配置：`.run/WebPorduce PostgreSQL.run.xml`
+- CMD 脚本：`start-postgres.cmd`
+
+IntelliJ 中选择 `WebPorduce PostgreSQL`，把 `DB_PASSWORD` 填成你的 PostgreSQL 密码后运行即可。脚本方式会提示输入密码：
+
+```cmd
+start-postgres.cmd
+```
+
+首次启动时 Flyway 会自动建表。注意：H2 里的旧账号和项目不会自动迁移到 PostgreSQL。
+
 ### 配置自己的 AI
 
 登录后进入 `#/settings/ai`，可以添加多套 AI 配置并指定一套为默认：
@@ -118,7 +133,7 @@ java -jar target/WebPorduce-0.0.1-SNAPSHOT.jar
 
 每套配置包含名称、Base URL、模型名和 API Key。API Key 使用 AES-GCM 加密后存入数据库，列表接口只返回末四位提示。之后所有项目的对话会优先使用当前用户的默认配置；未配置或调用失败时自动降级到本地 Mock，编辑器不会因此不可用。
 
-本地开发默认使用内置的演示加密密钥。生产环境必须设置 `APP_AI_ENCRYPTION_KEY`（至少 16 个字符，建议 32 字节以上随机值）：
+本地开发默认使用内置的演示加密密钥。`APP_AI_ENCRYPTION_KEY` 不是用户 AI 配置的重复项，而是服务端主密钥：用户填的是调用模型的 API Key，服务端用这个主密钥把所有用户的 API Key 加密后落库。`dev` / `local-postgres` 不设置也能启动；只有 `prod` 才强制设置（至少 16 个字符，建议 32 字节以上随机值）：
 
 ```bash
 APP_AI_ENCRYPTION_KEY=your-random-secret-at-least-16-chars
@@ -145,9 +160,9 @@ docker compose up --build
 
 | 变量 | 默认值 | 说明 |
 | --- | --- | --- |
-| `SPRING_PROFILES_ACTIVE` | `dev` | 生产使用 `prod` |
+| `SPRING_PROFILES_ACTIVE` | `dev` | `dev`（H2）/ `local-postgres`（本地 PostgreSQL）/ `prod`（生产） |
 | `DB_URL` | `jdbc:postgresql://localhost:5432/webporduce` | 数据库地址 |
-| `DB_USERNAME` / `DB_PASSWORD` | `webporduce` | 数据库账号 |
+| `DB_USERNAME` / `DB_PASSWORD` | `webporduce` | 数据库账号；使用 `local-postgres` 时启动前填密码 |
 | `APP_STORAGE_ROOT` | `./data/uploads` | 上传文件目录 |
 | `APP_AI_ENCRYPTION_KEY` | 空（开发环境有内置回退） | 加密用户 AI Key，生产必填，至少 16 字符 |
 | `AI_PROVIDER` | `mock` | `mock` 或 `deepseek`（服务端兜底） |
